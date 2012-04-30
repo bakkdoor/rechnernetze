@@ -1,6 +1,20 @@
 #include <stdlib.h>
 #include "list.h"
 
+/*
+  private struct definitions
+*/
+
+typedef struct node {
+  struct node *next;
+  void *data;
+} list_node_t;
+
+struct list {
+  list_node_t *first;
+  unsigned int size;
+};
+
 list_t *list_new(void)
 {
   list_t *list = (list_t*)malloc(sizeof(list_t));

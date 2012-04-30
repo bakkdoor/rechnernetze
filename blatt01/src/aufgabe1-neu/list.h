@@ -1,21 +1,17 @@
 #ifndef _LIST_H_
 #define _LIST_H_
 
-typedef struct node {
-  struct node *next;
-  void *data;
-} list_node_t;
-
-typedef struct list {
-  list_node_t *first;
-  unsigned int size;
-} list_t;
+struct list;
+typedef struct list list_t;
 
 typedef int bool;
 #define true 1
 #define false 0
 
 
+/*
+ Public List API
+*/
 
 list_t *list_new(void);
 void list_insert(list_t *list, void *data);
