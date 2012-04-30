@@ -3,10 +3,7 @@ CC		= gcc
 CPPFLAGS	= -Wall -g -c
 
 PROGNAME	= bin/person_list
-OBJECTS		= src/aufgabe1/mystrings.o src/aufgabe1/person_list.o
-
-NEU = bin/person_list_neu
-OBJECTS_NEU = src/aufgabe1-neu/list.o src/aufgabe1-neu/aufgabe1.o src/aufgabe1-neu/mystring.o
+OBJECTS		= src/aufgabe1/list.o src/aufgabe1/aufgabe1.o src/aufgabe1/mystring.o
 
 default: $(PROGNAME)
 
