@@ -5,6 +5,11 @@ typedef struct node {
   struct node *next;
 
   void *data;
+} list_node_t;
+
+typedef struct list {
+  list_node_t *first;
+  unsigned int size;
 } list_t;
 
 typedef int bool;

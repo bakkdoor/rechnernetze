@@ -4,44 +4,63 @@
 list_t *list_new(void)
 {
   list_t *list = (list_t*)malloc(sizeof(list_t));
-  printf("%d\n", list);
   if(list) {
-    list->next = NULL;
-    list->data = NULL;
+    list->first = NULL;
+    list->size = 0;
   }
   return list;
 }
 
-void list_insert(list_t *list, void *data)
+list_node_t *node_new(void *data)
 {
-  list_t *node = list_new();
+  list_node_t *node = (list_node_t*)malloc(sizeof(list_node_t));
   if(node) {
-    /* node->next = list->next; */
+    node->next = NULL;
     node->data = data;
   }
-  while(list->next != NULL) {
-    list = list->next;
+  return node;
+}
+
+void list_insert(list_t *list, void *data)
+{
+  if(!list)
+    return;
+
+  list_node_t *current = list->first;
+
+  if(list->first == NULL) {
+    list->first = node_new(data);
+    current = list->first;
+  } else {
+    // move to end
+    while(current->next) {
+      current = current->next;
+    }
+    current->next = node_new(data);
+    current = current->next;
   }
-  list->next = node;
+
+  if(current)
+    list->size++;
 }
 
 void list_remove(list_t *list, void *data, bool delete_all, int(*list_compare)(void *a, void *b))  // defaults to comparing pointers
 {
-  list_t *tmp;
-  int i = 0;
-  while(list) {
-    printf("%d\n", i);
-    i++;
-    if(list_compare(list->data, data) == 0) {
-      tmp = list;
-      list = list->next;
+  list_node_t *current = list->first;
+  list_node_t *tmp;
+  while(current) {
+    if(list_compare(current->data, data) == 0) {
+      tmp = current;
+      if(delete_all) {
+        current = current->next;
+      } else {
+        current = NULL;
+      }
       free(tmp->data);
-      printf("--->%d", tmp);
-      printf("\n");
       free(tmp);
+      list->size--;
     }
   }
-  /* free(list); */
 }
 
 int compare_true(void *a, void *b)
@@ -51,14 +70,26 @@ int compare_true(void *a, void *b)
 
 void list_clear(list_t *list)
 {
+  if(list == NULL)
+    return;
+
+  list_node_t *current = list->first;
+  list_node_t *tmp;
   list_remove(list, 0, true, &compare_true);
+  /* while(current) { */
+  /*   tmp = current; */
+  /*   current = current->next; */
+  /*   free(tmp->data); */
+  /*   free(tmp); */
+  /* } */
 }
 
 
 void list_foreach(list_t *list, void(*list_func)(void *a))
 {
-  for(; list != NULL; list = list->next) {
-    list_func(list->data);
+  list_node_t *current;
+  for(current = list->first; current != NULL; current = current->next) {
+    list_func(current->data);
   }
 }
 
