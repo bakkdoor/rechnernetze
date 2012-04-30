@@ -23,7 +23,7 @@ list_node_t *node_new(void *data)
 
 void list_insert(list_t *list, void *data)
 {
-  if(!list)
+  if(list == NULL)
     return;
 
   list_node_t *current = list->first;
@@ -46,6 +46,9 @@ void list_insert(list_t *list, void *data)
 
 void list_remove(list_t *list, void *data, bool delete_all, int(*list_compare)(void *a, void *b))  // defaults to comparing pointers
 {
+  if(list == NULL)
+    return;
+
   list_node_t *current = list->first;
   list_node_t *tmp;
   while(current) {
@@ -70,23 +73,15 @@ int compare_true(void *a, void *b)
 
 void list_clear(list_t *list)
 {
-  if(list == NULL)
-    return;
-
-  list_node_t *current = list->first;
-  list_node_t *tmp;
   list_remove(list, 0, true, &compare_true);
-  /* while(current) { */
-  /*   tmp = current; */
-  /*   current = current->next; */
-  /*   free(tmp->data); */
-  /*   free(tmp); */
-  /* } */
 }
 
 
 void list_foreach(list_t *list, void(*list_func)(void *a))
 {
+  if(list == NULL)
+    return;
+
   list_node_t *current;
   for(current = list->first; current != NULL; current = current->next) {
     list_func(current->data);
