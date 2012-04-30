@@ -14,7 +14,7 @@ $(PROGNAME): $(OBJECTS)
 	$(CC) $(CPPFLAGS) $<
 
 clean:
-	rm -rf *.o *~ $(PROGNAME) 2> /dev/null
+	rm -rf src/*.o *~ $(PROGNAME) 2> /dev/null
 
 run: $(PROGNAME)
 	./$(PROGNAME)
