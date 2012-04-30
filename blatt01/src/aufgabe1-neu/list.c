@@ -2,8 +2,8 @@
 #include "list.h"
 
 /*
-  private struct definitions
-*/
+  Private struct definitions
+ */
 
 typedef struct node {
   struct node *next;
@@ -12,8 +12,27 @@ typedef struct node {
 
 struct list {
   list_node_t *first;
-  unsigned int size;
+  size_t size;
 };
+
+/*
+  Private functions
+ */
+
+list_node_t *node_new(void *data)
+{
+  list_node_t *node = (list_node_t*)malloc(sizeof(list_node_t));
+  if(node) {
+    node->next = NULL;
+    node->data = data;
+  }
+  return node;
+}
+
+
+/*
+  Public functions
+ */
 
 list_t *list_new(void)
 {
@@ -25,14 +44,19 @@ list_t *list_new(void)
   return list;
 }
 
-list_node_t *node_new(void *data)
+
+void list_delete(list_t *list)
 {
-  list_node_t *node = (list_node_t*)malloc(sizeof(list_node_t));
-  if(node) {
-    node->next = NULL;
-    node->data = data;
-  }
-  return node;
+  list_clear(list);
+  free(list);
+}
+
+size_t list_size(list_t *list)
+{
+  if(list == NULL)
+    return 0;
+
+  return list->size;
 }
 
 void list_insert(list_t *list, void *data)
@@ -100,12 +124,6 @@ void list_foreach(list_t *list, void(*list_func)(void *a))
   for(current = list->first; current != NULL; current = current->next) {
     list_func(current->data);
   }
-}
-
-void list_delete(list_t *list)
-{
-  list_clear(list);
-  free(list);
 }
 
 void list_sort(list_t *list, int(*list_compare)(void *a, void *b))
