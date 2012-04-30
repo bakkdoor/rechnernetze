@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include "list.h"
 
 /*
@@ -80,6 +81,51 @@ void list_insert(list_t *list, void *data)
 
   if(current)
     list->size++;
+}
+
+unsigned int list_insert_after(list_t *list, void *data, bool(*predicate)(void *a, void *b))
+{
+  if(list == NULL)
+    return 0;
+
+  if(list->first == NULL) {
+    list_insert(list, data);
+    return 0;
+  }
+
+  list_node_t *current = list->first;
+  list_node_t *previous = NULL;
+  list_node_t *new;
+  unsigned int pos = 0;
+
+  while(current) {
+    if(previous) {
+      if(predicate(previous->data, data)) {
+        new = node_new(data);
+        new->next = current;
+        previous->next = new;
+        list->size++;
+        return pos;
+      }
+    } else {
+      if(predicate(data, current->data)) {
+        list_node_t *tmp = list->first;
+        list->first = node_new(data);
+        list->first->next = tmp;
+        list->size++;
+        return 1;
+      }
+    }
+
+    previous = current;
+    current = current->next;
+    pos++;
+  }
+
+  previous->next = node_new(data);
+  list->size++;
+
+  return pos;
 }
 
 void list_remove(list_t *list, void *data, bool delete_all, int(*list_compare)(void *a, void *b))  // defaults to comparing pointers
