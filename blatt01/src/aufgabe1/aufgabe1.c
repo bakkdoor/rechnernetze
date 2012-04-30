@@ -86,8 +86,13 @@ int main(int argc, char **argv)
   /*   exit(1); */
   /* } */
 
-  printf("Enter filename: ");
-  scanf("%255s", filename);
+  if(argc > 1) {
+    strcpy(filename, argv[1]);
+  } else {
+    printf("Enter filename: ");
+    scanf("%255s", filename);
+  }
+
   names = read_names_file(filename);
 
   printf("\nSORTED:\n");
