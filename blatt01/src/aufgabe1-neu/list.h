@@ -16,5 +16,6 @@ void list_remove(list_t *list, void *data, bool delete_all, int(*list_compare)(v
 void list_clear(list_t *list);
 void list_foreach(list_t *list, void(*list_func)(void *a));
 void list_delete(list_t *list);
+void list_sort(list_t *list, int(*list_compare)(void *a, void *b));
 
 #endif /* _LIST_H_ */

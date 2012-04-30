@@ -107,3 +107,8 @@ void list_delete(list_t *list)
   list_clear(list);
   free(list);
 }
+
+void list_sort(list_t *list, int(*list_compare)(void *a, void *b))
+{
+  /* TODO */
+}
