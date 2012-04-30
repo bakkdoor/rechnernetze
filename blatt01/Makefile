@@ -7,6 +7,9 @@ OBJECTS		= src/aufgabe1/list.o src/aufgabe1/aufgabe1.o src/aufgabe1/mystring.o
 
 default: $(PROGNAME)
 
+test: default
+	bin/person_list data/names.txt
+
 neu: $(OBJECTS_NEU)
 	$(CC) -o bin/person_list_neu $(OBJECTS_NEU)
 
