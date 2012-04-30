@@ -11,7 +11,7 @@ $(PROGNAME): $(OBJECTS)
 	$(CC) -o $@ $(OBJECTS)
 
 %.o: %.c %.h
-	$(CC) $(CPPFLAGS) $<
+	$(CC) $(CPPFLAGS) -o $@ $<
 
 clean:
 	rm -rf src/*.o *~ $(PROGNAME) 2> /dev/null
