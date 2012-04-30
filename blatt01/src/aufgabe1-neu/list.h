@@ -1,17 +1,14 @@
 #ifndef _LIST_H_
 #define _LIST_H_
 
-struct list;
-typedef struct list list_t;
-
-typedef int bool;
-#define true 1
-#define false 0
-
+#include "bool.h"
 
 /*
  Public List API
 */
+
+struct list;
+typedef struct list list_t;
 
 list_t *list_new(void);
 void list_insert(list_t *list, void *data);
