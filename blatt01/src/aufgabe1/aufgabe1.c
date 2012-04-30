@@ -95,7 +95,7 @@ int main(int argc, char **argv)
 
   names = read_names_file(filename);
 
-  printf("\nSORTED:\n");
+  printf("SORTED:\n");
   printf("===========\n");
   list_foreach(names, &person_print);
 
