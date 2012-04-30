@@ -45,9 +45,9 @@ list_t *list_new(void)
 }
 
 
-void list_delete(list_t *list)
+void list_delete(list_t *list, void(*delete_func)(void *data))
 {
-  list_clear(list);
+  list_clear(list, delete_func);
   free(list);
 }
 
@@ -127,7 +127,7 @@ unsigned int list_insert_after(list_t *list, void *data, bool(*predicate)(void *
   return pos;
 }
 
-void list_remove(list_t *list, void *data, bool delete_all, int(*list_compare)(void *a, void *b))  // defaults to comparing pointers
+void list_remove(list_t *list, void *data, bool delete_all, int(*list_compare)(void *a, void *b), void(*delete_func)(void *data))  // defaults to comparing pointers
 {
   if(list == NULL)
     return;
@@ -142,7 +142,7 @@ void list_remove(list_t *list, void *data, bool delete_all, int(*list_compare)(v
       } else {
         current = NULL;
       }
-      free(tmp->data);
+      delete_func(tmp->data);
       free(tmp);
       list->size--;
     }
@@ -154,9 +154,9 @@ int compare_true(void *a, void *b)
   return 0;
 }
 
-void list_clear(list_t *list)
+void list_clear(list_t *list, void(*delete_func)(void *data))
 {
-  list_remove(list, 0, true, &compare_true);
+  list_remove(list, 0, true, &compare_true, delete_func);
 }
 
 

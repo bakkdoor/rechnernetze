@@ -21,8 +21,9 @@ person_t *person_new(char *firstname, char *lastname) {
   return person;
 }
 
-void person_delete(person_t *person)
+void person_delete(void *data)
 {
+  person_t *person = (person_t*)data;
   if(person) {
     free(person->firstname);
     free(person->lastname);
@@ -93,6 +94,6 @@ int main(int argc, char **argv)
   printf("===========\n");
   list_foreach(names, &person_print);
 
-  list_delete(names);
+  list_delete(names, &person_delete);
   return 0;
 }
