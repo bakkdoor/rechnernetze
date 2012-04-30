@@ -13,9 +13,9 @@ int main(int argc, char **argv)
   int i;
 
   for(i = 0; i < 10; i++) {
-    char *string = malloc(4);
+    char *string = malloc(5);
     sprintf(string, "foo%d", i);
-    list_insert(list, (void*)string);
+    list_insert(list, string);
   }
 
   list_foreach(list, &print_elem);
