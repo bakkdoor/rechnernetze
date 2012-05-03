@@ -142,7 +142,9 @@ void list_remove(list_t *list, void *data, bool delete_all, int(*list_compare)(v
       } else {
         current = NULL;
       }
-      delete_func(tmp->data);
+      if(delete_func) {
+        delete_func(tmp->data);
+      }
       free(tmp);
       list->size--;
     }
