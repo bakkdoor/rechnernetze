@@ -1,27 +1,40 @@
 
-CC		= gcc
-CPPFLAGS	= -Wall -g -c
+CC							= gcc
+CPPFLAGS				= -Wall -g -c
 
-PROGNAME	= bin/person_list
-OBJECTS		= src/aufgabe1/list.o src/aufgabe1/aufgabe1.o src/aufgabe1/mystring.o
+CLIENT					= bin/client
+SERVER					= bin/server
+CLIENT_SRC			= src/client/client.o
+SERVER_SRC			= src/server/server.o
+COMMON					= src/common/unp_readline.o
 
-default: $(PROGNAME)
+default: $(CLIENT) $(SERVER)
 
-$(PROGNAME): $(OBJECTS)
-	$(CC) -o $@ $(OBJECTS)
+client: $(CLIENT)
+
+server: $(SERVER)
+
+$(CLIENT): $(COMMON) $(CLIENT_SRC)
+	$(CC) -o $@ $(COMMON) $(CLIENT_SRC)
+
+$(SERVER): $(COMMON) $(SERVER_SRC)
+	$(CC) -o $@ $(COMMON) $(SERVER_SRC)
 
 %.o: %.c %.h
 	$(CC) $(CPPFLAGS) -o $@ $<
 
 clean:
-	rm -rf src/**/*.o *~ $(PROGNAME) $(NEU) 2> /dev/null
+	rm -rf src/**/*.o *~ $(CLIENT) $(SERVER) 2> /dev/null
 
-test: default
-	./$(PROGNAME) data/names.txt
+run_client: $(CLIENT)
+	./$(CLIENT)
 
-run: $(PROGNAME)
-	./$(PROGNAME)
+run_server: $(SERVER)
+	./$(SERVER)
 
-vallgrind: $(PROGNAME)
-	valgrind --tool=memcheck --leak-check=yes ./$(PROGNAME)
+vallgrind_client: $(CLIENT)
+	valgrind --tool=memcheck --leak-check=yes ./$(CLIENT)
+
+vallgrind_server: $(SERVER)
+	valgrind --tool=memcheck --leak-check=yes ./$(SERVER)
 
