@@ -1,6 +1,6 @@
 
 CC							= gcc
-CPPFLAGS				= -Wall -g -c
+CPPFLAGS				= -Wall -g -c -I src/
 
 CLIENT					= bin/client
 SERVER					= bin/server
