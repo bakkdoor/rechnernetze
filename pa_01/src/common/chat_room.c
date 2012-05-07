@@ -39,5 +39,5 @@ int chat_room_user_count(const chat_room_t * room)
 
 void chat_room_send_message(const chat_user_t * user, const char * message)
 {
-  // TODO
+  /* TODO */
 }

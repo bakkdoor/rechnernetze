@@ -4,7 +4,7 @@ CPPFLAGS				= -Wall -g -c -I src/
 
 CLIENT					= bin/client
 SERVER					= bin/server
-CLIENT_SRC			= src/client/client.o
+CLIENT_SRC			= src/client/client.o src/client/connection.o
 SERVER_SRC			= src/server/server.o src/server/connection.o
 COMMON					= src/common/unp_readline.o src/common/list.o src/common/chat_user.o src/common/chat_room.o
 
@@ -27,10 +27,10 @@ clean:
 	rm -rf src/**/*.o *~ $(CLIENT) $(SERVER) 2> /dev/null
 
 run_client: $(CLIENT)
-	./$(CLIENT)
+	./$(CLIENT) $(ADDR) $(PORT) $(NAME)
 
 run_server: $(SERVER)
-	./$(SERVER)
+	./$(SERVER) $(PORT)
 
 vallgrind_client: $(CLIENT)
 	valgrind --tool=memcheck --leak-check=yes ./$(CLIENT)
