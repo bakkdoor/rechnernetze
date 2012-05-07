@@ -67,7 +67,7 @@ list_t *read_names_file(char *filename)
   while(!feof(file)) {
     if(fscanf(file, "%100s %100s\n", firstname, lastname) == 2) {
       if((person = person_new(firstname, lastname))) {
-        list_insert_after(list, person, &person_insert);
+        list_insert_after(list, person, person_insert);
       }
     }
   }
@@ -97,8 +97,8 @@ int main(int argc, char **argv)
 
   printf("SORTED:\n");
   printf("===========\n");
-  list_foreach(names, &person_print);
+  list_foreach(names, person_print);
 
-  list_delete(names, &person_delete);
+  list_delete(names, person_delete);
   return 0;
 }
