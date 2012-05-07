@@ -5,5 +5,7 @@
 
 int connection_setup(int port);
 int connection_close(int sockfd);
+int connection_accept(int sockfd);
+void connection_handle(int client_sock);
 
 #endif /* _SERVER_CONNECTION_H_ */

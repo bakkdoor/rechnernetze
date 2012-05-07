@@ -4,6 +4,7 @@
 #include "common/list.h"
 #include "common/chat_room.h"
 #include "common/chat_user.h"
+#include "common/bool.h"
 
 #include "messages.h"
 #include "connection.h"
@@ -17,6 +18,10 @@ void help(char * progname)
   printf("%s <server_port>\n", progname);
 }
 
+static bool Running;
+static int ServerSock;
+static int Port;
+
 int main(int argc, char ** argv)
 {
   if(argc == 1) {
@@ -24,18 +29,29 @@ int main(int argc, char ** argv)
     return 1;
   }
 
-  int port = atoi(argv[1]);
-  int sockfd;
+  Port = atoi(argv[1]);
+
+  if(Port <= 0) {
+    puts("Please provide a positive number for <server_port>");
+    help(argv[0]);
+    return 1;
+  }
 
   chat_rooms = list_new();
   chat_users = list_new();
 
-  printf("Chat Server - Listening on %d\n", port);
+  printf("Chat Server - Listening on %d\n", Port);
 
-  sockfd = connection_setup(port);
-  if(!sockfd) {
+  ServerSock = connection_setup(Port);
+  if(!ServerSock) {
     fprintf(stderr, "Fail :(\n");
     return 1;
+  }
+
+  Running = true;
+
+  while(Running) {
+    connection_handle(connection_accept(ServerSock));
   }
 
   return 0;

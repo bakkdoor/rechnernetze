@@ -16,3 +16,14 @@ int connection_close(int sockfd)
 {
   return close(sockfd);
 }
+
+int connection_accept(int sockfd)
+{
+  /* TODO */
+  return 0;
+}
+
+void connection_handle(int client_sock)
+{
+  /* TODO  */
+}
