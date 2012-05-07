@@ -7,15 +7,6 @@ OBJECTS		= src/aufgabe1/list.o src/aufgabe1/aufgabe1.o src/aufgabe1/mystring.o
 
 default: $(PROGNAME)
 
-test: default
-	bin/person_list data/names.txt
-
-neu: $(OBJECTS_NEU)
-	$(CC) -o bin/person_list_neu $(OBJECTS_NEU)
-
-$(NEU): $(OBJECTS_NEU)
-	$(CC) -o $@ $(OBJECTS_NEU)
-
 $(PROGNAME): $(OBJECTS)
 	$(CC) -o $@ $(OBJECTS)
 
@@ -24,6 +15,9 @@ $(PROGNAME): $(OBJECTS)
 
 clean:
 	rm -rf src/**/*.o *~ $(PROGNAME) $(NEU) 2> /dev/null
+
+test: default
+	./$(PROGNAME) data/names.txt
 
 run: $(PROGNAME)
 	./$(PROGNAME)
