@@ -177,3 +177,25 @@ void list_sort(list_t *list, int(*list_compare)(void *a, void *b))
 {
   /* TODO */
 }
+
+list_t *list_filter(list_t *list, bool(*predicate)(void *a))
+{
+  list_t *new = list_new();
+  list_node_t *current = list->first;
+  for(; current; current = current->next) {
+    if(predicate(current->data)) {
+      list_insert(new, current->data);
+    }
+  }
+  return new;
+}
+
+list_t *list_map(list_t *list, void*(*func)(void *a))
+{
+  list_t *new = list_new();
+  list_node_t *current = list->first;
+  for(; current; current = current->next) {
+    list_insert(new, func(current->data));
+  }
+  return new;
+}
