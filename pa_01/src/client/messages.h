@@ -27,7 +27,7 @@ typedef struct msg_cl_msg {
 } msg_cl_msg_t;
 
 typedef struct client_message {
-  client_message_type type;
+  client_message_type type : 4;
   union {
     msg_cl_con_req_t cl_con_req;
     msg_cl_room_msg_t cl_room_msg;
