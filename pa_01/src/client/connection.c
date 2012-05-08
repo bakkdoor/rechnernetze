@@ -94,6 +94,7 @@ client_message_t * connection_recv_client_message(int sock)
   buf[1] = '\0';
   type = atoi(buf);
 
+  /* TODO: */
   switch(type) {
   case SV_CON_REP:
     break;
