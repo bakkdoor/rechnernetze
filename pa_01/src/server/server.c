@@ -51,6 +51,8 @@ int main(int argc, char ** argv)
   Running = true;
 
   while(Running) {
+    /* TODO:
+       connection_handle() spaws thread for each connection */
     connection_handle(connection_accept(ServerSock));
   }
 
