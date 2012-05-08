@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include "connection.h"
+#include "server/connection.h"
 
 int connection_setup(int port)
 {
@@ -78,4 +79,42 @@ int connection_send_client_message(int sock, client_message_t * msg)
   free(buf); /* ?!?! TODO: Check if OK here. */
 
   return bytes_read;
+}
+
+client_message_t * connection_recv_client_message(int sock)
+{
+  char * buf;
+  /* size_t len; */
+  int bytes_read;
+  int type;
+  client_message_t * incoming_message = NULL;
+
+  buf = calloc(2, sizeof(char));
+  bytes_read = read(sock, buf, 1);
+  buf[1] = '\0';
+  type = atoi(buf);
+
+  switch(type) {
+  case SV_CON_REP:
+    break;
+
+  case SV_ROOM_MSG:
+    break;
+
+  case SV_AMSG:
+    break;
+
+  case SV_DISC_REP:
+    break;
+
+  case SV_DISC_AMSG:
+    break;
+
+  default:
+    fprintf(stderr, "Unknown incoming message type: %d", type);
+    assert(0);
+    break;
+  }
+
+  return incoming_message;
 }
