@@ -19,7 +19,7 @@ void help(char * progname)
 }
 
 static bool Running;
-static int ServerSock;
+static server_connection_t * ServerConn;
 static int Port;
 
 int main(int argc, char ** argv)
@@ -42,8 +42,8 @@ int main(int argc, char ** argv)
 
   printf("Chat Server - Listening on %d\n", Port);
 
-  ServerSock = connection_setup(Port);
-  if(!ServerSock) {
+  ServerConn = server_connection_new(Port);
+  if(!ServerConn) {
     fprintf(stderr, "Fail :(\n");
     return 1;
   }
@@ -53,7 +53,7 @@ int main(int argc, char ** argv)
   while(Running) {
     /* TODO:
        connection_handle() spaws thread for each connection */
-    connection_handle(connection_accept(ServerSock));
+    connection_handle(connection_accept(ServerConn));
   }
 
   return 0;
