@@ -53,7 +53,8 @@ int main(int argc, char ** argv)
   while(Running) {
     /* TODO:
        connection_handle() spaws thread for each connection */
-    connection_handle(connection_accept(ServerConn));
+    puts("waiting for connection");
+    server_connection_handle_incoming(ServerConn);
   }
 
   return 0;

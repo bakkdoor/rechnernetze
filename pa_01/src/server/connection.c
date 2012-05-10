@@ -7,11 +7,6 @@
 #include "common/error.h"
 #include "connection.h"
 
-struct connection {
-  int sock;
-  struct sockaddr_in * addr;
-};
-
 struct server_connection {
   int sock;
   int port;
@@ -54,21 +49,15 @@ server_connection_t * server_connection_new(int port)
   return server_conn;
 }
 
-bool connection_close(server_connection_t * conn)
+bool connection_close(server_connection_t * server_conn)
 {
-  if(!conn)
+  if(!server_conn)
     return false;
 
-  return close(conn->sock);
+  return close(server_conn->sock);
 }
 
-connection_t * connection_accept(server_connection_t * server_conn)
+void server_connection_handle_incoming(server_connection_t * server_conn)
 {
   /* TODO */
-  return 0;
-}
-
-void connection_handle(connection_t * client_conn)
-{
-  /* TODO  */
 }
