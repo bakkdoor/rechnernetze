@@ -4,10 +4,7 @@
 #include "common/bool.h"
 #include "messages.h"
 
-struct connection;
 typedef struct connection connection_t;
-
-struct server_connection;
 typedef struct server_connection server_connection_t;
 
 server_connection_t * server_connection_new(int port);
