@@ -1,26 +1,27 @@
 #include <stdlib.h>
-#include <stdio.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <unistd.h>
 
+#include "common/error.h"
 #include "connection.h"
 
 struct connection {
   int sock;
-  struct sockaddr_in addr;
+  struct sockaddr_in * addr;
 };
 
 struct server_connection {
   int sock;
   int port;
-  /* struct sockaddr_in addr; */
+  struct sockaddr_in * addr;
 };
 
 server_connection_t * server_connection_new(int port)
 {
   int sockfd;
+  struct sockaddr_in * addr;
 
   server_connection_t * server_conn = calloc(1, sizeof(server_connection_t));
   if(!server_conn)
@@ -28,12 +29,16 @@ server_connection_t * server_connection_new(int port)
 
   sockfd = socket(AF_INET, SOCK_DGRAM, 0);
   if(sockfd < 0) {
-    fprintf(stderr, "Could not setup server socket\n");
-    exit(1);
+    error("Could not setup server socket\n", true);
   }
 
   server_conn->sock = sockfd;
   server_conn->port = port;
+
+  addr = calloc(1, sizeof(struct sockaddr_in));
+  if(!addr) {
+    error("Could not setup sockaddr_in struct", true);
+  }
 
   return server_conn;
 }
