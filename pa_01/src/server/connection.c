@@ -20,7 +20,7 @@ struct server_connection {
 
 server_connection_t * server_connection_new(int port)
 {
-  int sockfd;
+  int sockfd, err;
   struct sockaddr_in * addr;
 
   server_connection_t * server_conn = calloc(1, sizeof(server_connection_t));
@@ -39,6 +39,17 @@ server_connection_t * server_connection_new(int port)
   if(!addr) {
     error("Could not setup sockaddr_in struct", true);
   }
+
+  addr->sin_family = AF_INET;
+  addr->sin_port = htons(port);
+  addr->sin_addr.s_addr = htonl(INADDR_ANY);
+
+  err = bind(sockfd, (struct sockaddr *) addr, sizeof(struct sockaddr_in));
+  if(err < 0) {
+    error("Could not bind on port\n", true);
+  }
+
+  server_conn->addr = addr;
 
   return server_conn;
 }
