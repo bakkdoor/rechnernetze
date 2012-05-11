@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include "common/list.h"
 #include "common/chat_room.h"
 #include "common/chat_user.h"
-#include "common/bool.h"
 
 #include "messages.h"
 #include "connection.h"

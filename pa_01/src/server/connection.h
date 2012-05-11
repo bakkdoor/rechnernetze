@@ -1,7 +1,7 @@
 #ifndef _SERVER_CONNECTION_H_
 #define _SERVER_CONNECTION_H_
 
-#include "common/bool.h"
+#include <stdbool.h>
 #include "messages.h"
 
 typedef struct server_connection server_connection_t;

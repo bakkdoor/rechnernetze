@@ -1,8 +1,8 @@
 #ifndef _LIST_H_
 #define _LIST_H_
 
-#include "sys/types.h"
-#include "bool.h"
+#include <sys/types.h>
+#include <stdbool.h>
 
 /*
  Public List API

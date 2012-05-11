@@ -1,7 +1,7 @@
 #ifndef _ERROR_H_
 #define _ERROR_H_
 
-#include "bool.h"
+#include <stdbool.h>
 
 void error(char * message, bool quit);
 
