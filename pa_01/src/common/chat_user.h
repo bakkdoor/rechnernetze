@@ -9,7 +9,7 @@ typedef struct chat_user {
   int sockfd;
 } chat_user_t;
 
-chat_user_t * chat_user_new(char * name, int sockfd);
+chat_user_t * chat_user_new(const char * name, int sockfd);
 void chat_user_delete(void * user);
 
 #endif /* _CHAT_USER_H_ */

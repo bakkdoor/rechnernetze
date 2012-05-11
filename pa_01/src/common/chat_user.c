@@ -3,7 +3,7 @@
 #include "chat_user.h"
 #include "chat_room.h"
 
-chat_user_t * chat_user_new(char * name, int sockfd)
+chat_user_t * chat_user_new(const char * name, int sockfd)
 {
   chat_user_t * user = calloc(1, sizeof(chat_user_t));
   if(!user)
