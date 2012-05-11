@@ -49,6 +49,15 @@ server_connection_t * server_connection_new(int port)
   return server_conn;
 }
 
+void server_connection_delete(server_connection_t * server_conn)
+{
+  if(!server_conn)
+    return;
+
+  free(server_conn->addr);
+  free(server_conn);
+}
+
 bool connection_close(server_connection_t * server_conn)
 {
   if(!server_conn)
