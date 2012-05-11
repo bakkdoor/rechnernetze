@@ -51,7 +51,7 @@ void list_delete(list_t * list, void (* delete_func)(void * data))
   free(list);
 }
 
-size_t list_size(list_t * list)
+size_t list_size(const list_t * list)
 {
   if(list == NULL)
     return 0;
@@ -162,7 +162,7 @@ void list_clear(list_t * list, void (* delete_func)(void * data))
 }
 
 
-void list_foreach(list_t * list, void (* list_func)(void * a))
+void list_foreach(const list_t * list, void (* list_func)(void * a))
 {
   if(list == NULL)
     return;
@@ -178,7 +178,7 @@ void list_sort(list_t * list, int (* list_compare)(void * a, void * b))
   /*  TODO */
 }
 
-list_t * list_filter(list_t * list, bool (* predicate)(void * a))
+list_t * list_filter(const list_t * list, bool (* predicate)(void * a))
 {
   list_t * new = list_new();
   list_node_t * current = list->first;
@@ -190,7 +190,7 @@ list_t * list_filter(list_t * list, bool (* predicate)(void * a))
   return new;
 }
 
-list_t * list_map(list_t * list, void * (* func)(void * a))
+list_t * list_map(const list_t * list, void * (* func)(void * a))
 {
   list_t * new = list_new();
   list_node_t * current = list->first;
@@ -200,7 +200,7 @@ list_t * list_map(list_t * list, void * (* func)(void * a))
   return new;
 }
 
-void * list_find_first(list_t * list, bool * (* compare_func)(void * a))
+void * list_find_first(const list_t * list, bool * (* compare_func)(void * a))
 {
   list_node_t * current = list->first;
   for(; current; current = current->next) {
