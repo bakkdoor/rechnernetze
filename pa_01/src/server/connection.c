@@ -68,5 +68,9 @@ bool connection_close(server_connection_t * server_conn)
 
 void server_connection_handle_incoming(server_connection_t * server_conn)
 {
-  /* TODO */
+  /* TODO:
+     - recvfrom(server_conn->sock);
+     - dispatch messages to connected clients on same chat_room
+     - ?
+   */
 }

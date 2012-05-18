@@ -51,9 +51,6 @@ int main(int argc, char ** argv)
   Running = true;
 
   while(Running) {
-    /* TODO:
-       connection_handle() spaws thread for each connection */
-    puts("waiting for connection");
     server_connection_handle_incoming(ServerConn);
   }
 
