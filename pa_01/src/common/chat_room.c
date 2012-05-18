@@ -41,6 +41,16 @@ int chat_room_user_count(const chat_room_t * room)
   return list_size(room->users);
 }
 
+void chat_room_add_user(chat_room_t * room, chat_user_t * user)
+{
+  if(!room)
+    return;
+  if(!user)
+    return;
+
+  list_insert(room->users, user);
+}
+
 void chat_room_send_message(const chat_user_t * user, const char * message)
 {
   /* TODO */
