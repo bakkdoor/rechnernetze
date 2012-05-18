@@ -1,7 +1,6 @@
 #ifndef _CHAT_ROOM_H_
 #define _CHAT_ROOM_H_
 
-#include "list.h"
 #include "chat_user.h"
 
 struct chat_room;
