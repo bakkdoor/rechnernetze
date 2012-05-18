@@ -4,10 +4,8 @@
 #include "list.h"
 #include "chat_user.h"
 
-typedef struct chat_room {
-  char * name;
-  list_t * users;
-} chat_room_t;
+struct chat_room;
+typedef struct chat_room chat_room_t;
 
 chat_room_t * chat_room_new(const char * name);
 void chat_room_delete(void * room);
