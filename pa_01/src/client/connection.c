@@ -12,22 +12,25 @@
 #include "connection.h"
 #include "../common/error.h"
 #include "../common/dnsutils.h"
+#include "../common/network_conversations.h"
 
+enum {
+  DEFAULT_TIMEOUT_SEC = 5
+};
 
 struct client_connection {
-  int sock;
   char * username;
+  int sock;
   struct sockaddr_in * server_addr;
+  int incoming_sock;
+  struct sockaddr_in * incoming_addr;
 };
 
 client_connection_t * connection_setup(const char * server_hostname, int server_port, char * username)
 {
   int count;
-  int fds_count;
   client_connection_t * cli_conn;
   client_message_t message;
-  fd_set read_fds;
-  struct timeval timeout;
   server_message_t * reply_msg;
   
   cli_conn = calloc(1, sizeof(client_connection_t));
@@ -54,52 +57,62 @@ client_connection_t * connection_setup(const char * server_hostname, int server_
   message.type = CL_CON_REQ;
   message.cl_con_req.length = htons(strlen(username));
   // TODO
-  message.cl_con_req.name = username;
-  
-  timeout.tv_sec = 5;  // TODO: export value to constant
-  timeout.tv_usec = 0;
-  
+  message.cl_con_req.name = str_to_net(username);
+    
   for (count = 0; count < 3; count++) {
-    FD_ZERO(&read_fds);
-    FD_SET(cli_conn->sock, &read_fds);
   
     connection_send_client_message(cli_conn, &message);
-    fds_count = select(cli_conn->sock + 1, &read_fds, NULL, NULL, &timeout);
-    
-    if (fds_count > 0) {
+    if (connection_has_incoming_data(cli_conn->sock, DEFAULT_TIMEOUT_SEC) > 0) {
       reply_msg = connection_recv_client_message(cli_conn);
-      if (reply_msg && reply_msg->type == SV_CON_REP) {
-	if (reply_msg->sv_con_rep.result == CON_REP_OK) {
-	  printf("Verbindung akzeptiert. Der Port für die weitere Kommunikation lautet %u.\n", 
-		 reply_msg->sv_con_rep.comm_port);
-	  
-	  cli_conn->server_addr->sin_port = htons(reply_msg->sv_con_rep.comm_port);
-	} else if (reply_msg->sv_con_rep.result == CON_REP_BAD_USERNAME) {
-	  printf("Verbindung fehlgeschlagen. Benutzername %s bereits vergeben.", username);
+      if (reply_msg) {
+	if (reply_msg->type == SV_CON_REP) {
+	  if (reply_msg->sv_con_rep.result == CON_REP_OK) {
+	    printf("Verbindung akzeptiert. Der Port für die weitere Kommunikation lautet %u.\n", 
+		  reply_msg->sv_con_rep.comm_port);
+	    
+	    //cli_conn->server_addr->sin_port = htons(reply_msg->sv_con_rep.comm_port);
+	    cli_conn->incoming_addr->sin_family = AF_INET;
+	    cli_conn->incoming_addr->sin_addr.s_addr = htonl(INADDR_ANY);
+	    cli_conn->incoming_addr->sin_port = htons(reply_msg->sv_con_rep.comm_port);
+	    
+	    cli_conn->incoming_sock = socket(AF_INET, SOCK_DGRAM, 0);
+	    if (!cli_conn->incoming_sock) {
+	      error("Could not create incoming socket!", true);
+	    }
+	    
+	    if (bind(cli_conn->incoming_sock, (struct sockaddr *) cli_conn->incoming_addr, sizeof(cli_conn->incoming_addr)) < 0) {
+	      // can not bind socket at this port!!!
+	      // TODO
+	    }
+	    
+	  } else if (reply_msg->sv_con_rep.result == CON_REP_BAD_USERNAME) {
+	    printf("Verbindung fehlgeschlagen. Benutzername %s bereits vergeben.", username);
+	  }
 	}
-	
 	free(reply_msg);
 	return cli_conn;
       }
-      
     }
   }
   printf("Verbindung fehlgeschlagen. Wartezeit verstrichen.");
   
   close(cli_conn->sock);
+  /* ???
   free(cli_conn->username);
   free(cli_conn->server_addr);
+  */
   free(cli_conn);
   return NULL;
 }
 
 int connection_close(client_connection_t * cli_conn)
 {
-  int count;
+  int count, count_incoming;
   client_message_t msg;
   struct timeval timeout;
   server_message_t * reply_msg;
   hostent_t *he;
+  fd_set read_fds;
   
   msg.type = CL_DISC_REQ;
   
@@ -111,25 +124,29 @@ int connection_close(client_connection_t * cli_conn)
     }
   }
   
-  printf("Beende die Verbindung zu Server %s (%s)\n", he->h_name, inet_ntoa(cli_conn->server_addr->sin_addr));
+  printf("Beende die Verbindung zu Server %s (%s)\n", 
+	 he->h_name, inet_ntoa(cli_conn->server_addr->sin_addr));
   
-  timeout.tv_sec = 5;  // TODO: export value to constant
+  timeout.tv_sec = DEFAULT_TIMEOUT_SEC;
   timeout.tv_usec = 0;
   
   for (count = 0; count < 3; count++) {
     // try to send DISC_REQ
     if (connection_send_client_message(cli_conn, &msg) > 0) {
-      select(0, NULL, NULL, NULL, &timeout);
-      // send data, parse...
-      reply_msg = connection_recv_client_message(cli_conn);
-      if (reply_msg) {
-	if (reply_msg->type == SV_DISC_REP) {
-	  printf("Verbindung erfolgreich beendet.");
-	  break;
-	} else {
-	  // TODO handle message
+      // data send, parse incoming...
+      
+      while(connection_has_incoming_data(cli_conn->incoming_sock, DEFAULT_TIMEOUT_SEC) > 0) {
+      
+	reply_msg = connection_recv_client_message(cli_conn);
+	if (reply_msg) {
+	  if (reply_msg->type == SV_DISC_REP) {
+	    printf("Verbindung erfolgreich beendet.");
+	    break;
+	  } else {
+	    // TODO handle message
+	  }
+	  free(reply_msg);
 	}
-	free(reply_msg);
       }
     }
   }
@@ -138,7 +155,7 @@ int connection_close(client_connection_t * cli_conn)
     printf("Verbindung nicht erfolgreich beendet. Wartezeit verstrichen.");
   }
   
-  if (close(cli_conn->sock) == 0) {
+  if (close(cli_conn->sock) == 0 && close(cli_conn->incoming_sock) == 0) {
     free(cli_conn);
     return 0;
   } else {
@@ -219,9 +236,10 @@ server_message_t * connection_recv_client_message(client_connection_t * cli_conn
 
   buf = calloc(MAX_SERVER_MSG_SIZE, sizeof(char));
   
-  bytes_read = recvfrom(cli_conn->sock, buf, sizeof(buf), 0, 
-			(struct sockaddr *) cli_conn->server_addr, 
+  bytes_read = recvfrom(cli_conn->incoming_sock, buf, sizeof(buf), 0, 
+			(struct sockaddr *) cli_conn->incoming_addr, 
 			(socklen_t *) sizeof(struct sockaddr_in));
+  
   if (bytes_read < 1) {
     free(buf);
     return NULL;
@@ -264,4 +282,19 @@ server_message_t * connection_recv_client_message(client_connection_t * cli_conn
 
   free(buf);
   return incoming_message;
+}
+
+int connection_has_incoming_data(int sockfd, int timeout_sec) {
+  fd_set read_fds;  
+  struct timeval timeout;
+  
+  if (!sockfd) return 0;
+  
+  timeout.tv_sec = timeout_sec;
+  timeout.tv_usec = 0;
+  
+  FD_ZERO(&read_fds);
+  FD_SET(sockfd, &read_fds);
+  
+  return select(sockfd + 1, &read_fds, NULL, NULL, &timeout);
 }
