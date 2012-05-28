@@ -7,7 +7,7 @@
 typedef struct client_connection client_connection_t;
 
 client_connection_t * connection_setup(const char * server_hostname, int server_port, char * username);
-int connection_close(int sockfd);
+int connection_close(client_connection_t * cli_conn);
 int connection_send_client_message(client_connection_t * cli_conn, client_message_t * msg);
 server_message_t * connection_recv_client_message(client_connection_t * cli_conn);
 

@@ -2,6 +2,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <netdb.h>
 #include <sys/select.h>
 #include <assert.h>
 #include <stdio.h>
@@ -10,6 +11,7 @@
 
 #include "connection.h"
 #include "../common/error.h"
+#include "../common/dnsutils.h"
 
 
 struct client_connection {
@@ -47,7 +49,6 @@ client_connection_t * connection_setup(const char * server_hostname, int server_
   cli_conn->server_addr->sin_family = AF_INET;
   cli_conn->server_addr->sin_addr.s_addr = inet_addr(server_hostname);
   cli_conn->server_addr->sin_port = htons(server_port);
-  
   cli_conn->username = username;
   
   message.type = CL_CON_REQ;
@@ -55,15 +56,15 @@ client_connection_t * connection_setup(const char * server_hostname, int server_
   // TODO
   message.cl_con_req.name = username;
   
-  FD_ZERO(&read_fds);
-  FD_SET(cli_conn->sock, &read_fds);
-  
-  timeout.tv_sec = 5;
+  timeout.tv_sec = 5;  // TODO: export value to constant
   timeout.tv_usec = 0;
   
   for (count = 0; count < 3; count++) {
+    FD_ZERO(&read_fds);
+    FD_SET(cli_conn->sock, &read_fds);
+  
     connection_send_client_message(cli_conn, &message);
-    fds_count = select(2, &read_fds, NULL, NULL, &timeout);
+    fds_count = select(cli_conn->sock + 1, &read_fds, NULL, NULL, &timeout);
     
     if (fds_count > 0) {
       reply_msg = connection_recv_client_message(cli_conn);
@@ -92,16 +93,64 @@ client_connection_t * connection_setup(const char * server_hostname, int server_
   return NULL;
 }
 
-int connection_close(int sockfd)
+int connection_close(client_connection_t * cli_conn)
 {
-  return close(sockfd);
+  int count;
+  client_message_t msg;
+  struct timeval timeout;
+  server_message_t * reply_msg;
+  hostent_t *he;
+  
+  msg.type = CL_DISC_REQ;
+  
+  he = get_host_name(&cli_conn->server_addr->sin_addr);
+  if (!he) {
+    he = get_host_ip4(inet_ntoa(cli_conn->server_addr->sin_addr));
+    if (!he) {
+      assert(false);
+    }
+  }
+  
+  printf("Beende die Verbindung zu Server %s (%s)\n", he->h_name, inet_ntoa(cli_conn->server_addr->sin_addr));
+  
+  timeout.tv_sec = 5;  // TODO: export value to constant
+  timeout.tv_usec = 0;
+  
+  for (count = 0; count < 3; count++) {
+    // try to send DISC_REQ
+    if (connection_send_client_message(cli_conn, &msg) > 0) {
+      select(0, NULL, NULL, NULL, &timeout);
+      // send data, parse...
+      reply_msg = connection_recv_client_message(cli_conn);
+      if (reply_msg) {
+	if (reply_msg->type == SV_DISC_REP) {
+	  printf("Verbindung erfolgreich beendet.");
+	  break;
+	} else {
+	  // TODO handle message
+	}
+	free(reply_msg);
+      }
+    }
+  }
+  
+  if (count == 3) {
+    printf("Verbindung nicht erfolgreich beendet. Wartezeit verstrichen.");
+  }
+  
+  if (close(cli_conn->sock) == 0) {
+    free(cli_conn);
+    return 0;
+  } else {
+    return -1;
+  }
 }
 
 int connection_send_client_message(client_connection_t * cli_conn, client_message_t * msg)
 {
   char * buf;
   size_t len;
-  int bytes_read;
+  int bytes_send;
 
   switch(msg->type) {
   case CL_CON_REQ:
@@ -149,11 +198,15 @@ int connection_send_client_message(client_connection_t * cli_conn, client_messag
     break;
   }
 
-  //bytes_read = write(sock, buf, len);
+  //bytes_send = write(sock, buf, len);
+  
+  bytes_send = sendto(cli_conn->sock, buf, len, 0, 
+		      (struct sockaddr *) cli_conn->server_addr, 
+		      sizeof(struct sockaddr_in));
 
   free(buf); /* ?!?! TODO: Check if OK here. */
 
-  return bytes_read;
+  return bytes_send;
 }
 
 server_message_t * connection_recv_client_message(client_connection_t * cli_conn)
@@ -161,14 +214,14 @@ server_message_t * connection_recv_client_message(client_connection_t * cli_conn
   char * buf;
   /* size_t len; */
   int bytes_read;
-  int type;
+  char type;
   server_message_t * incoming_message = NULL;
 
   buf = calloc(MAX_SERVER_MSG_SIZE, sizeof(char));
   
   bytes_read = recvfrom(cli_conn->sock, buf, sizeof(buf), 0, 
 			(struct sockaddr *) cli_conn->server_addr, 
-			(socklen_t *) sizeof(cli_conn->server_addr));
+			(socklen_t *) sizeof(struct sockaddr_in));
   if (bytes_read < 1) {
     free(buf);
     return NULL;

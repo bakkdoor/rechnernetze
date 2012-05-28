@@ -1,7 +1,7 @@
 #ifndef _CLIENT_MESSAGES_H_
 #define _CLIENT_MESSAGES_H_
 
-#define MAX_CLIENT_MSG_SIZE 2048
+#define MAX_CLIENT_MSG_SIZE 1500
 
 typedef enum {
   CL_CON_REQ = 1,

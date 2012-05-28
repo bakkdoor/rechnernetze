@@ -6,7 +6,7 @@ CLIENT					= bin/client
 SERVER					= bin/server
 CLIENT_SRC			= src/client/client.o src/client/connection.o
 SERVER_SRC			= src/server/server.o src/server/connection.o
-COMMON					= src/common/unp_readline.o src/common/list.o src/common/chat_user.o src/common/chat_room.o src/common/error.o
+COMMON					= src/common/unp_readline.o src/common/list.o src/common/chat_user.o src/common/chat_room.o src/common/error.o src/common/dnsutils.o
 
 default: $(CLIENT) $(SERVER)
 

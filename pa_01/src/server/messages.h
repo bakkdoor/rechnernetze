@@ -1,7 +1,7 @@
 #ifndef _SERVER_MESSAGES_H_
 #define _SERVER_MESSAGES_H_
 
-#define MAX_SERVER_MSG_SIZE 2048
+#define MAX_SERVER_MSG_SIZE 1500
 
 typedef enum {
   SV_CON_REP = 2,
