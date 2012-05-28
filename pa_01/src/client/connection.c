@@ -2,19 +2,94 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <sys/select.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "connection.h"
-#include "server/connection.h"
+#include "../common/error.h"
 
-int connection_setup(int port)
+
+struct client_connection {
+  int sock;
+  char * username;
+  struct sockaddr_in * server_addr;
+};
+
+client_connection_t * connection_setup(const char * server_hostname, int server_port, char * username)
 {
-  /* TODO */
-  /* int sockfd; */
-  return 0;
+  int count;
+  int fds_count;
+  client_connection_t * cli_conn;
+  client_message_t message;
+  fd_set read_fds;
+  struct timeval timeout;
+  server_message_t * reply_msg;
+  
+  cli_conn = calloc(1, sizeof(client_connection_t));
+  if (!cli_conn) {
+    error("Could not allocate memory!", true);
+  }
+  
+  cli_conn->sock = socket(AF_INET, SOCK_DGRAM, 0);
+  if (cli_conn->sock < 0) {
+    error("Could not create socket!", true);
+  }
+  
+  cli_conn->server_addr = calloc(1, sizeof(struct sockaddr_in));
+  if (!cli_conn->server_addr) {
+    close(cli_conn->sock);
+    error("Could not setup server address!", true);
+  }
+  
+  cli_conn->server_addr->sin_family = AF_INET;
+  cli_conn->server_addr->sin_addr.s_addr = inet_addr(server_hostname);
+  cli_conn->server_addr->sin_port = htons(server_port);
+  
+  cli_conn->username = username;
+  
+  message.type = CL_CON_REQ;
+  message.cl_con_req.length = htons(strlen(username));
+  // TODO
+  message.cl_con_req.name = username;
+  
+  FD_ZERO(&read_fds);
+  FD_SET(cli_conn->sock, &read_fds);
+  
+  timeout.tv_sec = 5;
+  timeout.tv_usec = 0;
+  
+  for (count = 0; count < 3; count++) {
+    connection_send_client_message(cli_conn, &message);
+    fds_count = select(2, &read_fds, NULL, NULL, &timeout);
+    
+    if (fds_count > 0) {
+      reply_msg = connection_recv_client_message(cli_conn);
+      if (reply_msg && reply_msg->type == SV_CON_REP) {
+	if (reply_msg->sv_con_rep.result == CON_REP_OK) {
+	  printf("Verbindung akzeptiert. Der Port für die weitere Kommunikation lautet %u.\n", 
+		 reply_msg->sv_con_rep.comm_port);
+	  
+	  cli_conn->server_addr->sin_port = htons(reply_msg->sv_con_rep.comm_port);
+	} else if (reply_msg->sv_con_rep.result == CON_REP_BAD_USERNAME) {
+	  printf("Verbindung fehlgeschlagen. Benutzername %s bereits vergeben.", username);
+	}
+	
+	free(reply_msg);
+	return cli_conn;
+      }
+      
+    }
+  }
+  printf("Verbindung fehlgeschlagen. Wartezeit verstrichen.");
+  
+  close(cli_conn->sock);
+  free(cli_conn->username);
+  free(cli_conn->server_addr);
+  free(cli_conn);
+  return NULL;
 }
 
 int connection_close(int sockfd)
@@ -22,7 +97,7 @@ int connection_close(int sockfd)
   return close(sockfd);
 }
 
-int connection_send_client_message(int sock, client_message_t * msg)
+int connection_send_client_message(client_connection_t * cli_conn, client_message_t * msg)
 {
   char * buf;
   size_t len;
@@ -74,29 +149,46 @@ int connection_send_client_message(int sock, client_message_t * msg)
     break;
   }
 
-  bytes_read = write(sock, buf, len);
+  //bytes_read = write(sock, buf, len);
 
   free(buf); /* ?!?! TODO: Check if OK here. */
 
   return bytes_read;
 }
 
-client_message_t * connection_recv_client_message(int sock)
+server_message_t * connection_recv_client_message(client_connection_t * cli_conn)
 {
   char * buf;
   /* size_t len; */
   int bytes_read;
   int type;
-  client_message_t * incoming_message = NULL;
+  server_message_t * incoming_message = NULL;
 
-  buf = calloc(2, sizeof(char));
-  bytes_read = read(sock, buf, 1);
-  buf[1] = '\0';
-  type = atoi(buf);
+  buf = calloc(MAX_SERVER_MSG_SIZE, sizeof(char));
+  
+  bytes_read = recvfrom(cli_conn->sock, buf, sizeof(buf), 0, 
+			(struct sockaddr *) cli_conn->server_addr, 
+			(socklen_t *) sizeof(cli_conn->server_addr));
+  if (bytes_read < 1) {
+    free(buf);
+    return NULL;
+  }
+  
+  type = memcpy(&type, buf, 1);
 
   /* TODO: */
   switch(type) {
   case SV_CON_REP:
+    incoming_message = calloc(1, sizeof(server_message_t));
+    if (!incoming_message) {
+      error("Could not allocate memory for a message!",false);
+      break;
+    } 
+    
+    incoming_message->type = type;    
+    memcpy(&incoming_message->sv_con_rep.result, buf + 1, sizeof(char));
+    memcpy(&incoming_message->sv_con_rep.comm_port, buf + 1 + sizeof(char), sizeof(int));
+    incoming_message->sv_con_rep.comm_port = ntohs(incoming_message->sv_con_rep.comm_port);
     break;
 
   case SV_ROOM_MSG:
@@ -117,5 +209,6 @@ client_message_t * connection_recv_client_message(int sock)
     break;
   }
 
+  free(buf);
   return incoming_message;
 }

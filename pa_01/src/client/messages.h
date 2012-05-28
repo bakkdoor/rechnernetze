@@ -1,12 +1,14 @@
 #ifndef _CLIENT_MESSAGES_H_
 #define _CLIENT_MESSAGES_H_
 
+#define MAX_CLIENT_MSG_SIZE 2048
+
 typedef enum {
   CL_CON_REQ = 1,
   CL_ROOM_MSG = 4,
   CL_MSG = 6,
   CL_DISC_REQ = 8,
-} client_message_type;
+} client_message_e;
 
 typedef struct msg_cl_con_req {
   int length : 4;
@@ -27,7 +29,7 @@ typedef struct msg_cl_msg {
 } msg_cl_msg_t;
 
 typedef struct client_message {
-  client_message_type type : 4;
+  client_message_e type : 4;
   union {
     msg_cl_con_req_t cl_con_req;
     msg_cl_room_msg_t cl_room_msg;
