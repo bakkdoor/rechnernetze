@@ -53,7 +53,7 @@ client_connection_t * connection_setup(const char * server_hostname, int server_
   if (inet_addr(server_hostname) == -1) {
     he = get_host_ip4(server_hostname);
     if (he != NULL && he->h_addr_list != NULL) {
-      cli_conn->server_addr->sin_addr.s_addr = he->h_addr_list[0];
+      cli_conn->server_addr->sin_addr.s_addr = inet_addr(he->h_addr_list[0]);
     } else {
       error("Bad server hostname!", true);
     }
@@ -98,7 +98,7 @@ client_connection_t * connection_setup(const char * server_hostname, int server_
 	    }
 	    
 	  } else if (reply_msg->sv_con_rep.result == CON_REP_BAD_USERNAME) {
-	    printf("Verbindung fehlgeschlagen. Benutzername %s bereits vergeben.", username);
+	    printf("Verbindung fehlgeschlagen. Benutzername %s bereits vergeben.\n", username);
 	  }
 	}
 	free(reply_msg);
@@ -106,7 +106,7 @@ client_connection_t * connection_setup(const char * server_hostname, int server_
       }
     }
   }
-  printf("Verbindung fehlgeschlagen. Wartezeit verstrichen.");
+  printf("Verbindung fehlgeschlagen. Wartezeit verstrichen.\n");
   
   close(cli_conn->sock);
   /* ???
@@ -119,12 +119,10 @@ client_connection_t * connection_setup(const char * server_hostname, int server_
 
 int connection_close(client_connection_t * cli_conn)
 {
-  int count, count_incoming;
+  int count;
   client_message_t msg;
-  struct timeval timeout;
   server_message_t * reply_msg;
   hostent_t *he;
-  fd_set read_fds;
   
   msg.type = CL_DISC_REQ;
   
@@ -139,9 +137,6 @@ int connection_close(client_connection_t * cli_conn)
   printf("Beende die Verbindung zu Server %s (%s)\n", 
 	 he->h_name, inet_ntoa(cli_conn->server_addr->sin_addr));
   
-  timeout.tv_sec = DEFAULT_TIMEOUT_SEC;
-  timeout.tv_usec = 0;
-  
   for (count = 0; count < 3; count++) {
     // try to send DISC_REQ
     if (connection_send_client_message(cli_conn, &msg) > 0) {
@@ -152,7 +147,7 @@ int connection_close(client_connection_t * cli_conn)
 	reply_msg = connection_recv_client_message(cli_conn);
 	if (reply_msg) {
 	  if (reply_msg->type == SV_DISC_REP) {
-	    printf("Verbindung erfolgreich beendet.");
+	    printf("Verbindung erfolgreich beendet.\n");
 	    break;
 	  } else {
 	    // TODO handle message
@@ -164,7 +159,7 @@ int connection_close(client_connection_t * cli_conn)
   }
   
   if (count == 3) {
-    printf("Verbindung nicht erfolgreich beendet. Wartezeit verstrichen.");
+    printf("Verbindung nicht erfolgreich beendet. Wartezeit verstrichen.\n");
   }
   
   if (close(cli_conn->sock) == 0 && close(cli_conn->incoming_sock) == 0) {
@@ -240,7 +235,7 @@ int connection_send_client_message(client_connection_t * cli_conn, client_messag
 
 server_message_t * connection_recv_client_message(client_connection_t * cli_conn)
 {
-  char * buf;
+  char * buf, * tmp;
   /* size_t len; */
   int bytes_read;
   char type;
@@ -257,7 +252,8 @@ server_message_t * connection_recv_client_message(client_connection_t * cli_conn
     return NULL;
   }
   
-  type = memcpy(&type, buf, 1);
+  tmp = (char *) memcpy(&type, buf, 1);
+  type = *tmp;
 
   /* TODO: */
   switch(type) {

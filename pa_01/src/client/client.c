@@ -21,8 +21,10 @@ int main(int argc, char ** argv)
   
   cli_conn = connection_setup(argv[1], atoi(argv[2]), argv[3]);
   if (!cli_conn) {
-    error("Coud not initalize connection!", true);
+    return 1;
   }
+  
+  // TODO handle masseges
   
   connection_close(cli_conn);
   return 0;

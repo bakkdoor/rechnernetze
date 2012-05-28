@@ -7,7 +7,7 @@
 
 #include "dnsutils.h"
 
-hostent_t * get_host_name_str(char * ip4_addr) {
+hostent_t * get_host_name_str(const char * ip4_addr) {
   struct hostent *he;
   struct in_addr ipv4addr;
 
@@ -16,14 +16,14 @@ hostent_t * get_host_name_str(char * ip4_addr) {
   return he;
 }
 
-hostent_t * get_host_name(struct in_addr * ip4_addr) {
+hostent_t * get_host_name(const struct in_addr * ip4_addr) {
   struct hostent *he;
 
   he = gethostbyaddr(ip4_addr, sizeof ip4_addr, AF_INET);
   return he;
 }
 
-hostent_t * get_host_ip4(char * hostname) {
+hostent_t * get_host_ip4(const char * hostname) {
   struct hostent * he;
     
   he = gethostbyname(hostname);
