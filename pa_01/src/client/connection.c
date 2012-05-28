@@ -32,6 +32,7 @@ client_connection_t * connection_setup(const char * server_hostname, int server_
   client_connection_t * cli_conn;
   client_message_t message;
   server_message_t * reply_msg;
+  hostent_t * he;
   
   cli_conn = calloc(1, sizeof(client_connection_t));
   if (!cli_conn) {
@@ -49,8 +50,19 @@ client_connection_t * connection_setup(const char * server_hostname, int server_
     error("Could not setup server address!", true);
   }
   
+  if (inet_addr(server_hostname) == -1) {
+    he = get_host_ip4(server_hostname);
+    if (he != NULL && he->h_addr_list != NULL) {
+      cli_conn->server_addr->sin_addr.s_addr = he->h_addr_list[0];
+    } else {
+      error("Bad server hostname!", true);
+    }
+  } else {
+    
+    cli_conn->server_addr->sin_addr.s_addr = inet_addr(server_hostname);
+  }
+  
   cli_conn->server_addr->sin_family = AF_INET;
-  cli_conn->server_addr->sin_addr.s_addr = inet_addr(server_hostname);
   cli_conn->server_addr->sin_port = htons(server_port);
   cli_conn->username = username;
   
