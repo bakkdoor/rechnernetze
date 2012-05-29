@@ -24,7 +24,7 @@ server_connection_t * server_connection_new(int port)
 
   sockfd = socket(AF_INET, SOCK_DGRAM, 0);
   if(sockfd < 0) {
-    error(true, "Could not setup server socket\n");
+    error(true, "Could not setup server socket");
   }
 
   server_conn->sock = sockfd;
@@ -41,7 +41,7 @@ server_connection_t * server_connection_new(int port)
 
   err = bind(sockfd, (struct sockaddr *) addr, sizeof(struct sockaddr_in));
   if(err < 0) {
-    error(true, "Could not bind on port\n");
+    error(true, "Could not bind on port");
   }
 
   server_conn->addr = addr;
