@@ -4,7 +4,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-#include "common/error.h"
+#include "common/output.h"
 #include "connection.h"
 
 struct server_connection {

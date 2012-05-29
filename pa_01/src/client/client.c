@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 #include "connection.h"
-#include "../common/error.h"
+#include "../common/output.h"
 
 void help(char * progname)
 {
@@ -13,19 +13,19 @@ void help(char * progname)
 int main(int argc, char ** argv)
 {
   client_connection_t * cli_conn;
-  
+
   if(argc < 4) {
     help(argv[0]);
     return 1;
   }
-  
+
   cli_conn = connection_setup(argv[1], atoi(argv[2]), argv[3]);
   if (!cli_conn) {
     return 1;
   }
-  
+
   // TODO handle masseges
-  
+
   connection_close(cli_conn);
   return 0;
 }

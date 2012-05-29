@@ -10,7 +10,7 @@
 #include <string.h>
 
 #include "connection.h"
-#include "../common/error.h"
+#include "../common/output.h"
 #include "../common/dnsutils.h"
 #include "../common/network_conversations.h"
 

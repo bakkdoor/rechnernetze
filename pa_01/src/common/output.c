@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "error.h"
+#include "output.h"
 
 void error(char * message, bool quit)
 {
