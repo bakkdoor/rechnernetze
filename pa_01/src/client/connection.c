@@ -58,7 +58,6 @@ client_connection_t * connection_setup(const char * server_hostname, int server_
       error(true, "Bad server hostname!");
     }
   } else {
-
     cli_conn->server_addr->sin_addr.s_addr = inet_addr(server_hostname);
   }
 
