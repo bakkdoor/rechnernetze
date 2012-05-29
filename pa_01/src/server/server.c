@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+#include "../common/output.h"
 #include "../common/list.h"
 #include "../common/chat_room.h"
 #include "../common/chat_user.h"
@@ -40,11 +41,11 @@ int main(int argc, char ** argv)
   chat_rooms = list_new();
   chat_users = list_new();
 
-  printf("Chat Server - Listening on %d\n", Port);
+  info("Chat Server - Listening on %d", Port);
 
   ServerConn = server_connection_new(Port);
   if(!ServerConn) {
-    fprintf(stderr, "Fail :(\n");
+    error(true, "Could not create server connection.");
     return 1;
   }
 

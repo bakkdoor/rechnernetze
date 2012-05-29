@@ -19,7 +19,7 @@ typedef enum {
 typedef enum {
   SV_ROOM_MSG_ACTION_JOIN = 0,
   SV_ROOM_MSG_ACTION_LEAVE = 1,
-} room_msg_action_e;
+} sv_room_msg_action_e;
 
 
 typedef struct sv_con_rep {
@@ -32,7 +32,7 @@ typedef struct sv_room_msg {
   char * room;
   int user_length;
   char * user;
-  room_msg_action_e action;
+  sv_room_msg_action_e action;
 } msg_sv_room_msg_t;
 
 typedef struct sv_amsg {

@@ -4,7 +4,7 @@
 
 #include "connection.h"
 #include "messages.h"
-#include "../common/error.h"
+#include "../common/output.h"
 #include "../common/unp_readline.h"
 
 const char * CHAT_CMD_JOIN = "/join %s";
@@ -26,17 +26,17 @@ int main(int argc, char ** argv)
   char input[1500], tmp[1500], format[1500];
   client_connection_t * cli_conn;
   client_message_t * msg;
-  
+
   if(argc < 4) {
     help(argv[0]);
     return 1;
   }
-  
+
   cli_conn = connection_setup(argv[1], atoi(argv[2]), argv[3]);
   if (!cli_conn) {
     return 1;
   }
-  
+
   for (;fscanf(stdin, CHAT_CMD_JOIN, input);) {
     sprintf(format, CHAT_CMD_JOIN, "roomname");
     printf("[HELP]: Join a channel with %s!\n", format);

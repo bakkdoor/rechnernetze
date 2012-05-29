@@ -5,9 +5,10 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
+
 #include "connection.h"
-#include "../common/error.h"
 #include "../common/list.h"
+#include "../common/output.h"
 
 struct server_connection {
   int sock;
@@ -50,7 +51,7 @@ server_connection_t * server_connection_new(int port)
 
   sockfd = socket(AF_INET, SOCK_DGRAM, 0);
   if(sockfd < 0) {
-    error("Could not setup server socket\n", true);
+    error(true, "Could not setup server socket");
   }
 
   server_conn->sock = sockfd;
@@ -58,7 +59,7 @@ server_connection_t * server_connection_new(int port)
 
   addr = calloc(1, sizeof(struct sockaddr_in));
   if(!addr) {
-    error("Could not setup sockaddr_in struct", true);
+    error(true, "Could not setup sockaddr_in struct");
   }
 
   addr->sin_family = AF_INET;
@@ -67,7 +68,7 @@ server_connection_t * server_connection_new(int port)
 
   err = bind(sockfd, (struct sockaddr *) addr, sizeof(struct sockaddr_in));
   if(err < 0) {
-    error("Could not bind on port\n", true);
+    error(true, "Could not bind on port");
   }
 
   server_conn->addr = addr;
@@ -96,6 +97,12 @@ bool connection_close(server_connection_t * server_conn)
 
 void server_connection_handle_incoming(server_connection_t * server_conn)
 {
+    struct timeval timeout;
+    
+    timeout.tv_sec = 5;
+    timeout.tv_usec = 0;
+    
+    select(0, NULL, NULL, NULL, &timeout);
   /* TODO:
      - recvfrom(server_conn->sock);
      - dispatch messages to connected clients on same chat_room

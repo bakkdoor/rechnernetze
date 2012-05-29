@@ -13,7 +13,7 @@ typedef enum {
 typedef enum {
   CL_ROOM_MSG_ACTION_JOIN = 0,
   CL_ROOM_MSG_ACTION_LEAVE = 1
-} room_msg_action_e;
+} cl_room_msg_action_e;
 
 
 typedef struct msg_cl_con_req {
@@ -24,7 +24,7 @@ typedef struct msg_cl_con_req {
 typedef struct msg_cl_room_msg {
   int length : 4;
   char * room_name;
-  room_msg_action_e action;
+  cl_room_msg_action_e action;
 } msg_cl_room_msg_t;
 
 typedef struct msg_cl_msg {
