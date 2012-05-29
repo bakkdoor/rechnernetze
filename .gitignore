@@ -14,3 +14,4 @@
 .DS_STORE
 *.~
 **/bin/*
+/pa_01/nbproject/private/
