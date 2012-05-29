@@ -23,7 +23,7 @@ typedef struct msg_sv_con_rep {
 
 
 typedef struct server_message {
-  server_message_e type : SV_CON_REP;
+  server_message_e type : 4;
   union {
     msg_sv_con_rep_t sv_con_rep;
   };
