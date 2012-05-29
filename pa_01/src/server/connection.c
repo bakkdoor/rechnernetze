@@ -1,17 +1,43 @@
 #include <stdlib.h>
+#include <stdbool.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <unistd.h>
 
-#include "common/error.h"
 #include "connection.h"
+#include "../common/error.h"
+#include "../common/list.h"
 
 struct server_connection {
   int sock;
   int port;
   struct sockaddr_in * addr;
+  list_t  * client_connections;
 };
+
+struct client_connection {
+  int sock;
+  struct sockaddr_in * addr;
+  list_t * rooms;
+};
+
+typedef struct client_connection client_connection_t;
+
+client_connection_t * create_client_connection(struct sockaddr_in * addr);
+bool client_in_room(const client_connection_t * cli_conn, const char * room);
+void close_and_delete_client_connection(client_connection_t * cli_conn);
+
+struct room {
+  char * name;
+};
+
+typedef struct room room_t;
+
+void delete_room(room_t * room);
+
+
+////////////////////////////////////////////////////////
 
 server_connection_t * server_connection_new(int port)
 {
@@ -62,7 +88,9 @@ bool connection_close(server_connection_t * server_conn)
 {
   if(!server_conn)
     return false;
-
+  
+  list_foreach(server_conn->client_connections, close_and_delete_client_connection);
+  
   return close(server_conn->sock);
 }
 
@@ -73,4 +101,57 @@ void server_connection_handle_incoming(server_connection_t * server_conn)
      - dispatch messages to connected clients on same chat_room
      - ?
    */
+}
+
+
+client_connection_t * create_client_connection(struct sockaddr_in * addr) {
+  client_connection_t * cli_conn;
+  
+  cli_conn = calloc(1, sizeof(client_connection_t));
+  if (!cli_conn) { 
+    //TODO
+  }
+  
+  cli_conn->addr->sin_family = AF_INET;
+  cli_conn->addr->sin_port = 0;
+  cli_conn->addr->sin_addr.s_addr = addr->sin_addr.s_addr;
+  
+  cli_conn->sock = socket(AF_INET, SOCK_DGRAM, 0);
+  if (cli_conn->sock < 0) {
+    //TODO
+  }
+  
+  if (bind(cli_conn->sock, (struct sockaddr *)cli_conn->addr, sizeof(struct sockaddr_in)) < 0) {
+    // TODO
+  }
+  
+  if (getsockname(cli_conn->sock, (struct sockaddr *)cli_conn->addr, sizeof(struct sockaddr_in)) < 0) {
+    // TODO
+  };
+  
+  return cli_conn;
+}
+
+void delete_room(room_t * room) {
+  free(room->name);
+  free(room);
+}
+
+// list function to delete client connection
+void close_and_delete_client_connection(client_connection_t * cli_conn) {
+  
+  if (close(cli_conn->sock) < 0) {
+    //TODO
+  }
+  
+  list_clear(cli_conn->rooms, delete_room);
+  free(cli_conn->rooms);
+  free(cli_conn->addr);
+  free(cli_conn);
+}
+
+
+bool client_in_room(const client_connection_t * cli_conn, const char * room) {
+  //TODO !!!!!!!!
+  return false;
 }

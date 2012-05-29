@@ -63,7 +63,7 @@ void list_clear(list_t * list, void (* delete_func)(void * data));
 
 /**
  * @param list List to loop over.
- * @param list_func Iteration function called with each element in list.
+ * @param list_func Iteration function called with each element data in list.
  **/
 void list_foreach(const list_t * list, void (* list_func)(void * a));
 
