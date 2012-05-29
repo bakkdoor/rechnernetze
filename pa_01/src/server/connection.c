@@ -24,7 +24,7 @@ server_connection_t * server_connection_new(int port)
 
   sockfd = socket(AF_INET, SOCK_DGRAM, 0);
   if(sockfd < 0) {
-    error("Could not setup server socket\n", true);
+    error(true, "Could not setup server socket\n");
   }
 
   server_conn->sock = sockfd;
@@ -32,7 +32,7 @@ server_connection_t * server_connection_new(int port)
 
   addr = calloc(1, sizeof(struct sockaddr_in));
   if(!addr) {
-    error("Could not setup sockaddr_in struct", true);
+    error(true, "Could not setup sockaddr_in struct");
   }
 
   addr->sin_family = AF_INET;
@@ -41,7 +41,7 @@ server_connection_t * server_connection_new(int port)
 
   err = bind(sockfd, (struct sockaddr *) addr, sizeof(struct sockaddr_in));
   if(err < 0) {
-    error("Could not bind on port\n", true);
+    error(true, "Could not bind on port\n");
   }
 
   server_conn->addr = addr;

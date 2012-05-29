@@ -3,6 +3,6 @@
 
 #include <stdbool.h>
 
-void error(char * message, bool quit);
+void error(bool quit, char * message);
 
 #endif /* _ERROR_H_ */

@@ -36,18 +36,18 @@ client_connection_t * connection_setup(const char * server_hostname, int server_
 
   cli_conn = calloc(1, sizeof(client_connection_t));
   if (!cli_conn) {
-    error("Could not allocate memory!", true);
+    error(true, "Could not allocate memory!");
   }
 
   cli_conn->sock = socket(AF_INET, SOCK_DGRAM, 0);
   if (cli_conn->sock < 0) {
-    error("Could not create socket!", true);
+    error(true, "Could not create socket!");
   }
 
   cli_conn->server_addr = calloc(1, sizeof(struct sockaddr_in));
   if (!cli_conn->server_addr) {
     close(cli_conn->sock);
-    error("Could not setup server address!", true);
+    error(true, "Could not setup server address!");
   }
 
   if (inet_addr(server_hostname) == -1) {
@@ -55,7 +55,7 @@ client_connection_t * connection_setup(const char * server_hostname, int server_
     if (he != NULL && he->h_addr_list != NULL) {
       cli_conn->server_addr->sin_addr.s_addr = inet_addr(he->h_addr_list[0]);
     } else {
-      error("Bad server hostname!", true);
+      error(true, "Bad server hostname!");
     }
   } else {
 
@@ -89,7 +89,7 @@ client_connection_t * connection_setup(const char * server_hostname, int server_
 
             cli_conn->incoming_sock = socket(AF_INET, SOCK_DGRAM, 0);
             if (!cli_conn->incoming_sock) {
-              error("Could not create incoming socket!", true);
+              error(true, "Could not create incoming socket!");
             }
 
             if (bind(cli_conn->incoming_sock, (struct sockaddr *) cli_conn->incoming_addr, sizeof(cli_conn->incoming_addr)) < 0) {
@@ -260,7 +260,7 @@ server_message_t * connection_recv_client_message(client_connection_t * cli_conn
   case SV_CON_REP:
     incoming_message = calloc(1, sizeof(server_message_t));
     if (!incoming_message) {
-      error("Could not allocate memory for a message!",false);
+      error(false, "Could not allocate memory for a message!");
       break;
     }
 

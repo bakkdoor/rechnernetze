@@ -4,7 +4,7 @@
 
 #include "output.h"
 
-void error(char * message, bool quit)
+void error(bool quit, char * message)
 {
   fprintf(stderr, "ERROR: %s\n", message);
   if(quit)
