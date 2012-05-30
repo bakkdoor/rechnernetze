@@ -21,20 +21,20 @@ typedef enum {
 
 
 typedef struct msg_cl_con_req {
-  unsigned int length;
+  unsigned int length : 4;
   char * name;
 } msg_cl_con_req_t;
 
 typedef struct msg_cl_room_msg {
-  unsigned int length;
+  unsigned int length : 4;
   char * room_name;
-  cl_room_msg_action_e action;
+  cl_room_msg_action_e action : 1;
 } msg_cl_room_msg_t;
 
 typedef struct msg_cl_msg {
-  unsigned int room_length;
+  unsigned int room_length : 4;
   char * room_name;
-  unsigned int msg_length;
+  unsigned int msg_length : 4;
   char * message;
 } msg_cl_msg_t;
 
@@ -84,24 +84,24 @@ typedef enum {
 
 
 typedef struct sv_con_rep {
-  con_rep_state_e state; 	// CON_REP_OK || CON_REP_BAD_USERNAME
-  unsigned int comm_port;
+  con_rep_state_e state : 1; 	// CON_REP_OK || CON_REP_BAD_USERNAME
+  unsigned int comm_port : 4;
 } msg_sv_con_rep_t;
 
 typedef struct sv_room_msg {
-  unsigned int room_length;
+  unsigned int room_length : 4;
   char * room;
-  unsigned int user_length;
+  unsigned int user_length : 4;
   char * user;
-  sv_room_msg_action_e action;
+  sv_room_msg_action_e action : 1;
 } msg_sv_room_msg_t;
 
 typedef struct sv_amsg {
-  unsigned int room_length;
+  unsigned int room_length : 4;
   char * room;
-  unsigned int user_length;
+  unsigned int user_length : 4;
   char * user;
-  unsigned int msg_length;
+  unsigned int msg_length : 4;
   char * msg;
 } msg_sv_amsg_t;
 
@@ -109,7 +109,7 @@ typedef struct sv_disc_rep {
 } msg_sv_disc_rep_t;
 
 typedef struct sv_disc_amsg {
-  unsigned int user_length;
+  unsigned int user_length : 4;
   char * user;
 } msg_ssv_disc_amsg_t;
 
