@@ -11,7 +11,7 @@
 #include "connection.h"
 
 static list_t * chat_rooms;
-static list_t * chat_users;
+static list_t * chat_clients;
 
 void help(char * progname)
 {
@@ -39,7 +39,7 @@ int main(int argc, char ** argv)
   }
 
   chat_rooms = list_new();
-  chat_users = list_new();
+  chat_clients = list_new();
 
   info("Chat Server - Listening on %d", Port);
 
