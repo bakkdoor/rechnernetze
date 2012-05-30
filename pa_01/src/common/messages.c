@@ -121,8 +121,6 @@ client_message_t * client_message_read(char * buf)
 size_t client_message_write(client_message_t * msg, char * buf)
 {
   size_t len;
-  unsigned int net_length;
-  char * name;
 
   memcpy(buf++, &msg->type, 1);
   len = 1;
@@ -131,47 +129,40 @@ size_t client_message_write(client_message_t * msg, char * buf)
   case CL_CON_REQ:
     len += 4 + msg->cl_con_req.length;
 
-    net_length = htons(msg->cl_con_req.length);
-    name = str_to_net(msg->cl_con_req.name);
-
-    memcpy(buf, &net_length, 4);
+    write_int(buf, msg->cl_con_req.length, 4);
     buf += 4;
-    memcpy(buf, name, msg->cl_con_req.length);
+
+    write_string(buf, msg->cl_con_req.name, msg->cl_con_req.length);
     buf += msg->cl_con_req.length;
-
-    free(name);
-
     break;
 
   case CL_ROOM_MSG:
     len += 4 + msg->cl_room_msg.length + 1;
-    net_length = htons(msg->cl_room_msg.length);
-    memcpy(buf, &net_length, 4);
+
+    write_int(buf, msg->cl_room_msg.length, 4);
     buf += 4;
-    memcpy(buf, &msg->cl_room_msg.action, 1);
+
+    write_string(buf, msg->cl_room_msg.room_name, msg->cl_room_msg.length);
+    buf += msg->cl_room_msg.length;
+
+    write_int(buf, msg->cl_room_msg.action, 1);
+    buf++;
     break;
 
   case CL_MSG:
-    len += 4 + strlen(msg->cl_msg.room_name) + 1 + strlen(msg->cl_msg.message) + 1;
+    len += 4 + msg->cl_msg.room_length + msg->cl_msg.msg_length;
 
-    net_length = htons(msg->cl_msg.room_length);
-    name = str_to_net(msg->cl_msg.room_name);
-    memcpy(buf, &net_length, 4);
+    write_int(buf, msg->cl_msg.room_length, 4);
     buf += 4;
-    memcpy(buf, name, msg->cl_msg.room_length);
+
+    write_string(buf, msg->cl_msg.room_name, msg->cl_msg.room_length);
     buf += msg->cl_msg.room_length;
 
-    free(name);
-
-    net_length = htons(msg->cl_msg.msg_length);
-    name = str_to_net(msg->cl_msg.message);
-    memcpy(buf, &net_length, 4);
+    write_int(buf, msg->cl_msg.msg_length, 4);
     buf += 4;
-    memcpy(buf, name, msg->cl_msg.msg_length);
+
+    write_string(buf, msg->cl_msg.message, msg->cl_msg.msg_length);
     buf += msg->cl_msg.msg_length;
-
-    free(name);
-
     break;
 
   case CL_DISC_REQ:
@@ -296,8 +287,6 @@ server_message_t * server_message_read(char * buf)
 size_t server_message_write(server_message_t * msg, char * buf)
 {
   size_t len;
-  unsigned int net_length;
-  char * name;
 
   memcpy(buf++, &msg->type, 1);
   len = 1;
