@@ -164,7 +164,7 @@ void _server_connection_handle_message(void * client_message)
 
 void server_connection_handle_client_messages(server_connection_t * server_conn)
 {
-  int ready_sockfds;
+  int ready_socks;
   struct timeval timeout;
 
   timeout.tv_sec = 0;
@@ -173,9 +173,9 @@ void server_connection_handle_client_messages(server_connection_t * server_conn)
   FD_ZERO(&_read_fds);
   list_foreach(server_conn->clients, client_fd_set);
 
-  ready_sockfds = select(server_conn->clients_nfds, &_read_fds, NULL, NULL, &timeout);
+  ready_socks = select(server_conn->clients_nfds, &_read_fds, NULL, NULL, &timeout);
 
-  if(ready_sockfds > 0) {
+  if(ready_socks > 0) {
     list_t * clients_with_data = list_filter(server_conn->clients, client_in_fdset);
     list_t * incoming_messages = list_map(clients_with_data, _client_handle_incoming);
     list_foreach(incoming_messages, _server_connection_handle_message);
