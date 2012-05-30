@@ -27,6 +27,18 @@ char * read_string(void * buf, size_t length)
   return str;
 }
 
+void write_int(void * buf, int i, size_t n_bytes)
+{
+  unsigned int net_int = htons(i);
+  memcpy(buf, &net_int, n_bytes);
+}
+
+void write_string(void * buf, char * str, size_t length)
+{
+  char * net_str = str_to_net(str);
+  memcpy(buf, net_str, length);
+  free(net_str);
+}
 
 /* MAIN MESSAGE FUNCTIONS */
 
@@ -281,7 +293,79 @@ server_message_t * server_message_read(char * buf)
   return message;
 }
 
-size_t server_message_write(server_message_t * server_message, char * buf)
+size_t server_message_write(server_message_t * msg, char * buf)
 {
-  return 0; /* TODO */
+  size_t len;
+  unsigned int net_length;
+  char * name;
+
+  memcpy(buf++, &msg->type, 1);
+  len = 1;
+
+  switch(msg->type) {
+  case SV_CON_REP:
+    len += 1 + 4;
+    write_int(buf, msg->sv_con_rep.state, 1);
+    buf++;
+    write_int(buf, msg->sv_con_rep.comm_port, 4);
+    buf += 4;
+    break;
+
+  case SV_ROOM_MSG:
+    len += 4 + msg->sv_room_msg.room_length + 4 + msg->sv_room_msg.user_length + 1;
+
+    write_int(buf, msg->sv_room_msg.room_length, 4);
+    buf += 4;
+
+    write_string(buf, msg->sv_room_msg.room, msg->sv_room_msg.room_length);
+    buf += msg->sv_room_msg.room_length;
+
+    write_int(buf, msg->sv_room_msg.user_length, 4);
+    buf += 4;
+
+    write_string(buf, msg->sv_room_msg.user, msg->sv_room_msg.user_length);
+    buf += msg->sv_room_msg.user_length;
+
+    write_int(buf, msg->sv_room_msg.action, 1);
+    buf++;
+    break;
+
+  case SV_AMSG:
+    len += 4 + msg->sv_amsg.room_length + 4 + msg->sv_amsg.user_length + 4 + msg->sv_amsg.msg_length;
+
+    write_int(buf, msg->sv_amsg.room_length, 4);
+    buf += 4;
+
+    write_string(buf, msg->sv_amsg.room, msg->sv_amsg.room_length);
+    buf += msg->sv_amsg.room_length;
+
+    write_int(buf, msg->sv_amsg.user_length, 4);
+    buf += 4;
+
+    write_string(buf, msg->sv_amsg.user, msg->sv_amsg.user_length);
+    buf += msg->sv_amsg.user_length;
+
+    write_int(buf, msg->sv_amsg.msg_length, 4);
+    buf += 4;
+
+    write_string(buf, msg->sv_amsg.msg, msg->sv_amsg.msg_length);
+    buf += msg->sv_amsg.msg_length;
+    break;
+
+  case SV_DISC_REP:
+    /* nothing to do */
+    break;
+
+  case SV_DISC_AMSG:
+    len += 4 + msg->sv_disc_amsg.user_length;
+
+    write_int(buf, msg->sv_disc_amsg.user_length, 4);
+    buf += 4;
+
+    write_string(buf, msg->sv_disc_amsg.user, msg->sv_disc_amsg.user_length);
+    buf += msg->sv_disc_amsg.user_length;
+    break;
+  }
+
+  return len;
 }
