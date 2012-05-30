@@ -83,14 +83,8 @@ bool connection_close(server_connection_t * server_conn)
   return close(server_conn->sock);
 }
 
-void server_connection_handle_incoming(server_connection_t * server_conn)
+void server_connection_handle_new_clients(server_connection_t * server_conn)
 {
-  /* TODO:
-     - recvfrom(server_conn->sock);
-     - dispatch messages to connected clients on same chat_room
-     - ?
-   */
-
   /* int bytes_read; */
   /* char * buf, * tmp; */
   /* size_t len; */
@@ -106,4 +100,24 @@ void server_connection_handle_incoming(server_connection_t * server_conn)
   /*                       (socklen_t *) sizeof(struct sockaddr_in)); */
 
   /* list_insert(server_conn->clients, client); */
+}
+
+static fd_set _read_fds;
+void client_fd_set(void * _client)
+{
+  client_t * client = _client;
+  FD_SET(client->sock, &_read_fds);
+}
+
+void server_connection_handle_client_messages(server_connection_t * server_conn)
+{
+  FD_ZERO(&_read_fds);
+  list_foreach(server_conn->clients, client_fd_set);
+
+}
+
+void server_connection_handle_incoming(server_connection_t * server_conn)
+{
+  server_connection_handle_new_clients(server_conn);
+  server_connection_handle_client_messages(server_conn);
 }
