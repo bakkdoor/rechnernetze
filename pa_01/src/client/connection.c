@@ -67,9 +67,9 @@ client_connection_t * connection_setup(const char * server_hostname, int server_
   cli_conn->username = username;
 
   message.type = CL_CON_REQ;
-  message.cl_con_req.length = htons(strlen(username));
+  message.cl_con_req.length = strlen(username) + 1;
   // TODO
-  message.cl_con_req.name = str_to_net(username);
+  message.cl_con_req.name = username;
 
   for (count = 0; count < 3; count++) {
 

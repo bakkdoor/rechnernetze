@@ -35,9 +35,10 @@ void write_int(void * buf, int i, size_t n_bytes)
 
 void write_string(void * buf, char * str, size_t length)
 {
-  char * net_str = str_to_net(str);
-  memcpy(buf, net_str, length);
-  free(net_str);
+  /* char * net_str = str_to_net(str); */
+  /* memcpy(buf, net_str, length); */
+  /* free(net_str); */
+  memcpy(buf, str, length);
 }
 
 /* MAIN MESSAGE FUNCTIONS */
