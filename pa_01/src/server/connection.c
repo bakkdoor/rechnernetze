@@ -106,7 +106,7 @@ void server_connection_handle_new_clients(server_connection_t * server_conn)
 
   buf = calloc(MAX_CLIENT_MSG_SIZE, sizeof(char));
 
-  bytes_read = recvfrom(server_conn->sock, buf, sizeof(buf), 0,
+  bytes_read = recvfrom(server_conn->sock, buf, MAX_CLIENT_MSG_SIZE, 0,
                         (struct sockaddr *) client_addr,
                         (socklen_t *) sizeof(struct sockaddr_in));
 

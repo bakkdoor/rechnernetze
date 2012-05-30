@@ -10,24 +10,24 @@
 
 /* HELPER FUNCTIONS  */
 
-unsigned int read_int(void * buf, size_t n_bytes)
+unsigned int read_int(char * buf, size_t n_bytes)
 {
   unsigned int length;
   memcpy(&length, buf, n_bytes);
   return ntohs(length);
 }
 
-char * read_string(void * buf, size_t length)
+char * read_string(char * buf, size_t length)
 {
   char * str;
-  char * tmp = calloc(1, length);
+  char * tmp = calloc(length, sizeof(char));
   memcpy(tmp, buf, length);
   str = net_to_str(tmp);
   free(tmp);
   return str;
 }
 
-void write_int(void * buf, int i, size_t n_bytes)
+void write_int(void * buf, unsigned int i, size_t n_bytes)
 {
   unsigned int net_int = htons(i);
   memcpy(buf, &net_int, n_bytes);
