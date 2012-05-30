@@ -11,6 +11,11 @@ void client_message_delete(client_message_t * client_message)
   /* TODO */
 }
 
+void _client_message_delete(void * client_message)
+{
+  client_message_delete((client_message_t *)client_message);
+}
+
 client_message_t * client_message_read(char * buf)
 {
   return NULL; /* TODO */
@@ -83,6 +88,11 @@ void server_message_delete(server_message_t * server_message) {
   }
 
   free(server_message);
+}
+
+void _server_message_delete(void * server_message)
+{
+  server_message_delete((server_message_t *)server_message);
 }
 
 server_message_t * server_message_read(char * buf)

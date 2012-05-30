@@ -42,7 +42,7 @@ typedef struct cl_disc_req {
 } msg_cl_disc_req_t;
 
 typedef struct client_message {
-  client_message_e type : CL_CON_REQ;
+  client_message_e type : 8; /* 1 byte */
   union {
     msg_cl_con_req_t cl_con_req;
     msg_cl_room_msg_t cl_room_msg;
@@ -52,6 +52,7 @@ typedef struct client_message {
 } client_message_t;
 
 void client_message_delete(client_message_t * client_message);
+void _client_message_delete(void * client_message);
 client_message_t * client_message_read(char * buf);
 size_t client_message_write(client_message_t * client_message, char * buf);
 
@@ -114,7 +115,7 @@ typedef struct sv_disc_amsg {
 
 
 typedef struct server_message {
-  server_message_e type;
+  server_message_e type : 8; /* 1 byte */
   union {
     msg_sv_con_rep_t sv_con_rep;
     msg_sv_room_msg_t sv_room_msg;
@@ -125,6 +126,7 @@ typedef struct server_message {
 } server_message_t;
 
 void server_message_delete(server_message_t * server_message);
+void _server_message_delete(void * server_message);
 server_message_t * server_message_read(char * buf);
 size_t server_message_write(server_message_t * server_message, char * buf);
 

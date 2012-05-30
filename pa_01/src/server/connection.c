@@ -218,7 +218,7 @@ void server_connection_handle_client_messages(server_connection_t * server_conn)
     list_t * incoming_messages = list_map(clients_with_data, _client_handle_incoming);
     list_foreach(incoming_messages, _server_connection_handle_message);
     list_delete(clients_with_data, NULL);
-    list_delete(incoming_messages, client_message_delete);
+    list_delete(incoming_messages, _client_message_delete);
   }
 }
 
