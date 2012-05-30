@@ -4,12 +4,6 @@
 #include "client.h"
 #include "../common/chat_user.h"
 
-struct client {
-  chat_user_t * chat_user;
-  struct sockaddr_in * addr;
-  int sock;
-};
-
 client_t * client_new(chat_user_t * chat_user, struct sockaddr_in * client_addr) {
   client_t * client;
 
