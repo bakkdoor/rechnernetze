@@ -82,21 +82,21 @@ void list_foreach(const list_t * list, void (* list_func)(void * a));
  * @param list List to be sorted.
  * @param list_compare Compare function used for sorting.
  **/
-void list_sort(list_t * list, int (* list_compare)(void * a, void * b));
+void list_sort(list_t * list, int (* list_compare)(const void * a, const void * b));
 
 /**
  * @param list List to be filtered from.
  * @param predictate Predicate function used to filter elements from list.
  * @return New list with all elements in list for which predicate returns true.
  **/
-list_t * list_filter(const list_t * list, bool (* predicate)(void * a));
+list_t * list_filter(const list_t * list, bool (* predicate)(const void * a));
 
 /**
  * @param list List to be mapped over.
  * @param func Function yielding new value for mapped list.
  * @return List of all return values of calling func on each element in list.
  **/
-list_t * list_map(const list_t * list, void * (* func)(void * a));
+list_t * list_map(const list_t * list, void * (* func)(const void * a));
 
 /**
  * @param list List to find element in.

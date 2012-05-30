@@ -158,12 +158,12 @@ void list_foreach(const list_t * list, void (* list_func)(void * a))
   }
 }
 
-void list_sort(list_t * list, int (* list_compare)(void * a, void * b))
+void list_sort(list_t * list, int (* list_compare)(const void * a, const void * b))
 {
   /*  TODO */
 }
 
-list_t * list_filter(const list_t * list, bool (* predicate)(void * a))
+list_t * list_filter(const list_t * list, bool (* predicate)(const void * a))
 {
   list_t * new = list_new();
   list_node_t * current = list->first;
@@ -175,7 +175,7 @@ list_t * list_filter(const list_t * list, bool (* predicate)(void * a))
   return new;
 }
 
-list_t * list_map(const list_t * list, void * (* func)(void * a))
+list_t * list_map(const list_t * list, void * (* func)(const void * a))
 {
   list_t * new = list_new();
   list_node_t * current = list->first;
