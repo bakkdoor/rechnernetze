@@ -1,8 +1,7 @@
 #ifndef _CLIENT_CONNECTION_H_
 #define _CLIENT_CONNECTION_H_
 
-#include "messages.h"
-#include "../server/messages.h"
+#include "../common/messages.h"
 
 typedef struct client_connection client_connection_t;
 

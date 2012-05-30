@@ -11,7 +11,7 @@
 #include "../common/list.h"
 #include "../common/chat_room.h"g
 #include "../common/output.h"
-#include "../client/messages.h"
+#include "../common/messages.h"
 
 struct server_connection {
   int sock;

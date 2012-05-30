@@ -7,7 +7,6 @@
 #include "../common/chat_room.h"
 #include "../common/chat_user.h"
 
-#include "messages.h"
 #include "connection.h"
 
 static list_t * chat_rooms;

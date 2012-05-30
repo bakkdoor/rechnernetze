@@ -1,9 +1,6 @@
 #ifndef _SERVER_CONNECTION_H_
 #define _SERVER_CONNECTION_H_
 
-#include <stdbool.h>
-#include "messages.h"
-
 typedef struct server_connection server_connection_t;
 
 server_connection_t * server_connection_new(int port);

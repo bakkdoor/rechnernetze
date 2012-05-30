@@ -3,7 +3,6 @@
 #include <string.h>
 
 #include "connection.h"
-#include "messages.h"
 #include "../common/output.h"
 #include "../common/unp_readline.h"
 
@@ -41,21 +40,21 @@ int main(int argc, char ** argv)
     sprintf(format, CHAT_CMD_JOIN, "roomname");
     printf("[HELP]: Join a channel with %s!\n", format);
   }
-    
+
   msg = calloc(1, sizeof(client_message_t));
   if (!msg) {
     //TODO
   }
-  
+
   msg->type = CL_ROOM_MSG;
   msg->cl_room_msg.action = CL_ROOM_MSG_ACTION_JOIN;
   msg->cl_room_msg.room_name = input;
   msg->cl_room_msg.length = strlen(input);
-  
+
   if (connection_send_client_message(cli_conn, msg) < 1) {
     //TODO can't send msg
   }
-  
+
   strcpy(input, "");
   // TODO handle masseges
   while (1) {
@@ -65,7 +64,7 @@ int main(int argc, char ** argv)
     } else if (input_is_join(input)) {
       // TODO
     } else if (input_is_leave(input)) {
-      
+
     } else {
       // std message
     }
