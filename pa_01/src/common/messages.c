@@ -19,7 +19,62 @@ void _client_message_delete(void * client_message)
 
 client_message_t * client_message_read(char * buf)
 {
-  return NULL; /* TODO */
+  char type;
+  char * tmp;
+  unsigned int length = 0;
+  client_message_t * message = calloc(1, sizeof(client_message_t));
+
+  if(!message)
+    error(false, "Could not allocate memory for a client message!");
+
+  tmp = (char *) memcpy(&type, buf, 1);
+  type = *tmp;
+
+  message->type = type;
+  buf++;
+
+  /* TODO: */
+  switch(type) {
+  case CL_CON_REQ:
+    memcpy(&length, buf, 4);
+    buf += 4;
+    message->cl_con_req.length = ntohs(length);
+    memcpy(message->cl_con_req.name, buf, length);
+    break;
+
+  case CL_ROOM_MSG:
+    memcpy(&length, buf, 4);
+    buf += 4;
+    message->cl_room_msg.length = ntohs(length);
+    memcpy(message->cl_room_msg.room_name, buf, length);
+    buf += length;
+    memcpy(&message->cl_room_msg.action, buf, 1);
+    break;
+
+  case CL_MSG:
+    memcpy(&length, buf, 4);
+    buf += 4;
+    message->cl_msg.room_length = ntohs(length);
+    memcpy(message->cl_msg.room_name, buf, length);
+    buf += length;
+
+    memcpy(&length, buf, 4);
+    buf += 4;
+    message->cl_msg.msg_length = ntohs(length);
+    memcpy(message->cl_msg.message, buf, length);
+    buf += length;
+    break;
+
+  case CL_DISC_REQ:
+    break;
+
+  default:
+    error(false, "Unknown incoming message type: %d", type);
+    assert(0);
+    break;
+  }
+
+  return message;
 }
 
 size_t client_message_write(client_message_t * msg, char * buf)
@@ -28,14 +83,16 @@ size_t client_message_write(client_message_t * msg, char * buf)
   unsigned int net_length;
   char * name;
 
+  memcpy(buf++, &msg->type, 1);
+  len = 1;
+
   switch(msg->type) {
   case CL_CON_REQ:
-    len = 1 + 4 + strlen(msg->cl_con_req.name) + 1;
+    len += 4 + msg->cl_con_req.length;
 
     net_length = htons(msg->cl_con_req.length);
     name = str_to_net(msg->cl_con_req.name);
 
-    memcpy(buf++, &msg->type, 1);
     memcpy(buf, &net_length, 4);
     buf += 4;
     memcpy(buf, name, msg->cl_con_req.length);
@@ -46,16 +103,15 @@ size_t client_message_write(client_message_t * msg, char * buf)
     break;
 
   case CL_ROOM_MSG:
-    len = 1 + 4 + strlen(msg->cl_room_msg.room_name) + 1 + 1;
+    len += 4 + msg->cl_room_msg.length + 1;
     net_length = htons(msg->cl_room_msg.length);
-    memcpy(buf++, &msg->type, 1);
     memcpy(buf, &net_length, 4);
+    buf += 4;
+    memcpy(buf, &msg->cl_room_msg.action, 1);
     break;
 
   case CL_MSG:
-    len = 1 + 4 + strlen(msg->cl_msg.room_name) + 1 + strlen(msg->cl_msg.message) + 1;
-
-    memcpy(buf++, &msg->type, 1);
+    len += 4 + strlen(msg->cl_msg.room_name) + 1 + strlen(msg->cl_msg.message) + 1;
 
     net_length = htons(msg->cl_msg.room_length);
     name = str_to_net(msg->cl_msg.room_name);
@@ -78,8 +134,7 @@ size_t client_message_write(client_message_t * msg, char * buf)
     break;
 
   case CL_DISC_REQ:
-    len = 1;
-    memcpy(buf, &msg->type, 1);
+    /* all done. only send msg id which is at beginning */
     break;
 
   default:
@@ -119,7 +174,7 @@ server_message_t * server_message_read(char * buf)
   server_message_t * message = calloc(1, sizeof(server_message_t));
 
   if(!message)
-    error(false, "Could not allocate memory for a message!");
+    error(false, "Could not allocate memory for a server message!");
 
   tmp = (char *) memcpy(&type, buf, 1);
   type = *tmp;
