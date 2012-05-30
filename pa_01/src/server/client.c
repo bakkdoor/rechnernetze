@@ -47,3 +47,25 @@ void client_send_message(client_t * client, server_message_t * message)
 {
   /* TODO: write into buf, then send buffer over via client->sock */
 }
+
+client_message_t * client_read_message(const client_t * client)
+{
+  char * buf;
+  int bytes_read;
+  client_message_t * incoming_message = NULL;
+
+  buf = calloc(MAX_CLIENT_MSG_SIZE, sizeof(char));
+
+  bytes_read = recvfrom(client->sock, buf, sizeof(buf), 0,
+                        (struct sockaddr *) client->addr,
+                        (socklen_t *) sizeof(struct sockaddr_in));
+
+  if(bytes_read < 1) {
+    free(buf);
+    return NULL;
+  }
+
+  incoming_message = client_message_read(buf);
+  free(buf);
+  return incoming_message;
+}

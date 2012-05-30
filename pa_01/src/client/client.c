@@ -22,7 +22,7 @@ void help(char * progname)
 
 int main(int argc, char ** argv)
 {
-  char input[1500], tmp[1500], format[1500];
+  char input[1500], /* tmp[1500], */ format[1500];
   client_connection_t * cli_conn;
   client_message_t * msg;
 
