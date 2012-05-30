@@ -20,6 +20,7 @@ struct server_connection {
   struct sockaddr_in * addr;
   list_t  * rooms;
   list_t  * clients;
+  int clients_nfds;
 };
 
 static server_connection_t * _server_connection = NULL;
@@ -115,11 +116,70 @@ void client_fd_set(void * _client)
   FD_SET(client->sock, &_read_fds);
 }
 
+bool client_in_fdset(const void * _client)
+{
+  const client_t * client = _client;
+  return FD_ISSET(client->sock, &_read_fds);
+}
+
+client_message_t * client_handle_incoming(const client_t * client)
+{
+  char * buf;
+  int bytes_read;
+  client_message_t * incoming_message = NULL;
+
+  buf = calloc(MAX_CLIENT_MSG_SIZE, sizeof(char));
+
+  bytes_read = recvfrom(client->sock, buf, sizeof(buf), 0,
+                        (struct sockaddr *) client->addr,
+                        (socklen_t *) sizeof(struct sockaddr_in));
+
+  if(bytes_read < 1) {
+    free(buf);
+    return NULL;
+  }
+
+  incoming_message = client_message_read(buf);
+  free(buf);
+  return incoming_message;
+}
+
+void * _client_handle_incoming(const void * client)
+{
+  return client_handle_incoming((client_t *)client);
+}
+
+void server_connection_handle_message(client_message_t * client_message)
+{
+ /*
+    TODO:
+    dispatch logic (send messages to all users in same room etc
+ */
+}
+
+void _server_connection_handle_message(void * client_message)
+{
+  server_connection_handle_message((client_message_t *)client_message);
+}
+
 void server_connection_handle_client_messages(server_connection_t * server_conn)
 {
+  int ready_sockfds;
+  struct timeval timeout;
+
+  timeout.tv_sec = 0;
+  timeout.tv_usec = DEFAULT_TIMEOUT_USEC;
+
   FD_ZERO(&_read_fds);
   list_foreach(server_conn->clients, client_fd_set);
 
+  ready_sockfds = select(server_conn->clients_nfds, &_read_fds, NULL, NULL, &timeout);
+
+  if(ready_sockfds > 0) {
+    list_t * clients_with_data = list_filter(server_conn->clients, client_in_fdset);
+    list_t * incoming_messages = list_map(clients_with_data, _client_handle_incoming);
+    list_foreach(incoming_messages, _server_connection_handle_message);
+  }
 }
 
 void server_connection_handle_incoming(server_connection_t * server_conn)
