@@ -4,7 +4,7 @@
 #include "client.h"
 #include "../common/chat_user.h"
 
-client_t * client_new(chat_user_t * chat_user, struct sockaddr_in * client_addr) {
+client_t * client_new(chat_user_t * chat_user, struct sockaddr_in * client_addr, int port) {
   client_t * client;
 
   client = calloc(1, sizeof(client_t));
@@ -13,7 +13,7 @@ client_t * client_new(chat_user_t * chat_user, struct sockaddr_in * client_addr)
   }
 
   client->addr->sin_family = AF_INET;
-  client->addr->sin_port = 0;
+  client->addr->sin_port = port;
   client->addr->sin_addr.s_addr = client_addr->sin_addr.s_addr;
   client->sock = socket(AF_INET, SOCK_DGRAM, 0);
   if (client->sock < 0) {
@@ -41,4 +41,9 @@ void client_delete(void * _client) {
   chat_user_delete(client->chat_user);
   free(client->addr);
   free(client);
+}
+
+void client_send_message(client_t * client, server_message_t * message)
+{
+  /* TODO: write into buf, then send buffer over via client->sock */
 }
