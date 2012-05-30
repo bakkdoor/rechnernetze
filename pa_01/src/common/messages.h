@@ -42,7 +42,7 @@ typedef struct cl_disc_req {
 } msg_cl_disc_req_t;
 
 typedef struct client_message {
-  client_message_e type : 8; /* 1 byte */
+  client_message_e type;
   union {
     msg_cl_con_req_t cl_con_req;
     msg_cl_room_msg_t cl_room_msg;
@@ -115,7 +115,7 @@ typedef struct sv_disc_amsg {
 
 
 typedef struct server_message {
-  server_message_e type : 8; /* 1 byte */
+  server_message_e type;
   union {
     msg_sv_con_rep_t sv_con_rep;
     msg_sv_room_msg_t sv_room_msg;

@@ -5,6 +5,7 @@
 
 #include "messages.h"
 #include "output.h"
+#include "network_conversations.h"
 
 void client_message_delete(client_message_t * client_message)
 {
@@ -24,45 +25,61 @@ client_message_t * client_message_read(char * buf)
 size_t client_message_write(client_message_t * msg, char * buf)
 {
   size_t len;
+  unsigned int net_length;
+  char * name;
 
   switch(msg->type) {
   case CL_CON_REQ:
     len = 1 + 4 + strlen(msg->cl_con_req.name) + 1;
-    buf = calloc(1, len);
-    sprintf(buf,
-            "%1d%2d%s",
-            msg->type,
-            htons(strlen(msg->cl_con_req.name)),
-            msg->cl_con_req.name);
+
+    net_length = htons(msg->cl_con_req.length);
+    name = str_to_net(msg->cl_con_req.name);
+
+    memcpy(buf++, &msg->type, 1);
+    memcpy(buf, &net_length, 4);
+    buf += 4;
+    memcpy(buf, name, msg->cl_con_req.length);
+    buf += msg->cl_con_req.length;
+
+    free(name);
+
     break;
 
   case CL_ROOM_MSG:
     len = 1 + 4 + strlen(msg->cl_room_msg.room_name) + 1 + 1;
-    buf = calloc(1, len);
-    sprintf(buf,
-            "%1d%2d%s%1d",
-            msg->type,
-            htons(strlen(msg->cl_room_msg.room_name)),
-            msg->cl_room_msg.room_name,
-            msg->cl_room_msg.action);
+    net_length = htons(msg->cl_room_msg.length);
+    memcpy(buf++, &msg->type, 1);
+    memcpy(buf, &net_length, 4);
     break;
 
   case CL_MSG:
     len = 1 + 4 + strlen(msg->cl_msg.room_name) + 1 + strlen(msg->cl_msg.message) + 1;
-    buf = calloc(1, len);
-    sprintf(buf,
-            "%1d%2d%s%2d%s",
-            msg->type,
-            htons(strlen(msg->cl_msg.room_name)),
-            msg->cl_msg.room_name,
-            htons(strlen(msg->cl_msg.room_name)),
-            msg->cl_msg.message);
+
+    memcpy(buf++, &msg->type, 1);
+
+    net_length = htons(msg->cl_msg.room_length);
+    name = str_to_net(msg->cl_msg.room_name);
+    memcpy(buf, &net_length, 4);
+    buf += 4;
+    memcpy(buf, name, msg->cl_msg.room_length);
+    buf += msg->cl_msg.room_length;
+
+    free(name);
+
+    net_length = htons(msg->cl_msg.msg_length);
+    name = str_to_net(msg->cl_msg.message);
+    memcpy(buf, &net_length, 4);
+    buf += 4;
+    memcpy(buf, name, msg->cl_msg.msg_length);
+    buf += msg->cl_msg.msg_length;
+
+    free(name);
+
     break;
 
   case CL_DISC_REQ:
     len = 1;
-    buf = calloc(1, len);
-    sprintf(buf, "%1d", msg->type);
+    memcpy(buf, &msg->type, 1);
     break;
 
   default:
