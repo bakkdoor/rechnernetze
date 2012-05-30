@@ -103,6 +103,6 @@ list_t * list_map(const list_t * list, void * (* func)(void * a));
  * @param compare_func Function returning true for elements that match search.
  * @return First element in list for which compare_func returns true.
  **/
-void * list_find_first(const list_t * list, bool (* compare_func)(void * a));
+void * list_find_first(const list_t * list, bool (* compare_func)(const void * a));
 
 #endif /* _LIST_H_ */

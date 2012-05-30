@@ -185,7 +185,7 @@ list_t * list_map(const list_t * list, void * (* func)(void * a))
   return new;
 }
 
-void * list_find_first(const list_t * list, bool (* compare_func)(void * a))
+void * list_find_first(const list_t * list, bool (* compare_func)(const void * a))
 {
   list_node_t * current = list->first;
   for(; current; current = current->next) {

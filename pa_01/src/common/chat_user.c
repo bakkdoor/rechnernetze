@@ -44,12 +44,17 @@ char * chat_user_name(const chat_user_t * user)
   return user->name;
 }
 
+static char * _room_name = "";
+bool room_with_correct_name(const void * _room)
+{
+  const chat_room_t * room = _room;
+  return strcmp(room->name, _room_name) == 0;
+}
+
 bool chat_user_in_room(const chat_user_t * user, const char * room_name)
 {
-  list_node_t * current = user->rooms->first;
-  for(; current; current = current->next) {
-    if(strcmp(((chat_room_t*)current->data)->name, room_name) == 0)
-      return true;
-  }
+  _room_name = (char*)room_name;
+  if(list_find_first(user->rooms, room_with_correct_name))
+    return true;
   return false;
 }
