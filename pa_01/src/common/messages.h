@@ -51,6 +51,10 @@ typedef struct client_message {
   };
 } client_message_t;
 
+void client_message_delete(client_message_t * client_message);
+client_message_t * client_message_read(char * buf);
+size_t client_message_write(client_message_t * client_message, char * buf);
+
 
 /*
    Server Messages
@@ -122,6 +126,6 @@ typedef struct server_message {
 
 void server_message_delete(server_message_t * server_message);
 server_message_t * server_message_read(char * buf);
-int server_message_write(server_message_t * server_message, char * buf);
+size_t server_message_write(server_message_t * server_message, char * buf);
 
 #endif /* _MESSAGES_H_ */
