@@ -7,6 +7,29 @@
 #include "output.h"
 #include "network_conversations.h"
 
+
+/* HELPER FUNCTIONS  */
+
+unsigned int read_int(void * buf, size_t n_bytes)
+{
+  unsigned int length;
+  memcpy(&length, buf, n_bytes);
+  return ntohs(length);
+}
+
+char * read_string(void * buf, size_t length)
+{
+  char * str;
+  char * tmp = calloc(1, length);
+  memcpy(tmp, buf, length);
+  str = net_to_str(tmp);
+  free(tmp);
+  return str;
+}
+
+
+/* MAIN MESSAGE FUNCTIONS */
+
 void client_message_delete(client_message_t * client_message)
 {
   /* TODO */
@@ -36,32 +59,38 @@ client_message_t * client_message_read(char * buf)
   /* TODO: */
   switch(type) {
   case CL_CON_REQ:
-    memcpy(&length, buf, 4);
+    length = read_int(buf, 4);
     buf += 4;
-    message->cl_con_req.length = ntohs(length);
-    memcpy(message->cl_con_req.name, buf, length);
+    message->cl_con_req.length = length;
+
+    message->cl_con_req.name = read_string(buf, length);
+    buf += length;
     break;
 
   case CL_ROOM_MSG:
-    memcpy(&length, buf, 4);
+    length = read_int(buf, 4);
     buf += 4;
-    message->cl_room_msg.length = ntohs(length);
-    memcpy(message->cl_room_msg.room_name, buf, length);
+    message->cl_room_msg.length = length;
+
+    message->cl_room_msg.room_name = read_string(buf, length);
     buf += length;
-    memcpy(&message->cl_room_msg.action, buf, 1);
+
+    message->cl_room_msg.action = read_int(buf, 1);
     break;
 
   case CL_MSG:
-    memcpy(&length, buf, 4);
+    length = read_int(buf, 4);
     buf += 4;
-    message->cl_msg.room_length = ntohs(length);
-    memcpy(message->cl_msg.room_name, buf, length);
+    message->cl_msg.room_length = length;
+
+    message->cl_msg.room_name = read_string(buf, length);
     buf += length;
 
-    memcpy(&length, buf, 4);
+    length = read_int(buf, 4);
     buf += 4;
-    message->cl_msg.msg_length = ntohs(length);
-    memcpy(message->cl_msg.message, buf, length);
+    message->cl_msg.msg_length = length;
+
+    message->cl_msg.message = read_string(buf, length);
     buf += length;
     break;
 
@@ -172,32 +201,75 @@ server_message_t * server_message_read(char * buf)
   char type;
   char * tmp;
   server_message_t * message = calloc(1, sizeof(server_message_t));
+  unsigned int length;
 
   if(!message)
     error(false, "Could not allocate memory for a server message!");
 
   tmp = (char *) memcpy(&type, buf, 1);
   type = *tmp;
+  message->type = type;
+  buf++;
 
   /* TODO: */
   switch(type) {
   case SV_CON_REP:
-    message->type = type;
-    memcpy(&message->sv_con_rep.state, buf + 1, sizeof(char));
-    memcpy(&message->sv_con_rep.comm_port, buf + 1 + sizeof(char), sizeof(int));
-    message->sv_con_rep.comm_port = ntohs(message->sv_con_rep.comm_port);
+    message->sv_con_rep.state = read_int(buf, 1);
+    buf++;
+    message->sv_con_rep.comm_port = read_int(buf, 4);
+    buf += 4;
     break;
 
   case SV_ROOM_MSG:
+    length = read_int(buf, 4);
+    buf += 4;
+    message->sv_room_msg.room_length = length;
+
+    message->sv_room_msg.room = read_string(buf, length);
+    buf += length;
+
+    length = read_int(buf, 4);
+    buf += 4;
+    message->sv_room_msg.user_length = length;
+
+    message->sv_room_msg.user = read_string(buf, length);
+    buf += length;
     break;
 
   case SV_AMSG:
+    length = read_int(buf, 4);
+    buf += 4;
+    message->sv_amsg.room_length = length;
+
+    message->sv_amsg.room = read_string(buf, length);
+    buf += length;
+
+    length = read_int(buf, 4);
+    buf += 4;
+    message->sv_amsg.user_length = length;
+
+    message->sv_amsg.user = read_string(buf, length);
+    buf += length;
+
+    length = read_int(buf, 4);
+    buf += 4;
+    message->sv_amsg.msg_length = length;
+
+    message->sv_amsg.msg = read_string(buf, length);
+    buf += length;
     break;
 
   case SV_DISC_REP:
+    /* nothing to do */
     break;
 
   case SV_DISC_AMSG:
+    length = read_int(buf, 4);
+    buf += 4;
+    message->sv_disc_amsg.user_length = length;
+
+    message->sv_disc_amsg.user = read_string(buf, length);
+    buf += length;
     break;
 
   default:
