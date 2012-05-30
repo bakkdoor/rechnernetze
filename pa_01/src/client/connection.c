@@ -35,6 +35,11 @@ client_connection_t * connection_setup(const char * server_hostname, int server_
   server_message_t * reply_msg;
   hostent_t * he;
 
+  if(strlen(username) > 14) {
+    /* we can only store values up to 15 in 4 bytes, this leaves us with 14 chars + 0 byte for username string */
+    error(true, "Username too long. No more than 14 characters!");
+  }
+
   cli_conn = calloc(1, sizeof(client_connection_t));
   if (!cli_conn) {
     error(true, "Could not allocate memory!");
