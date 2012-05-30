@@ -67,18 +67,19 @@ void server_connection_delete(server_connection_t * server_conn)
   if(!server_conn)
     return;
 
+  server_connection_close(server_conn);
+
   list_delete(server_conn->rooms, chat_room_delete);
   list_delete(server_conn->clients, client_delete);
+
   free(server_conn->addr);
   free(server_conn);
 }
 
-bool connection_close(server_connection_t * server_conn)
+bool server_connection_close(server_connection_t * server_conn)
 {
   if(!server_conn)
     return false;
-
-  list_foreach(server_conn->clients, client_delete);
 
   return close(server_conn->sock);
 }
