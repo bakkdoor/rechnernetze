@@ -11,7 +11,8 @@
 #include "../common/list.h"
 #include "../common/chat_room.h"g
 #include "../common/output.h"
-#include "../common/messages.h"
+
+#define DEFAULT_TIMEOUT_USEC 1000
 
 struct server_connection {
   int sock;
@@ -20,6 +21,8 @@ struct server_connection {
   list_t  * rooms;
   list_t  * clients;
 };
+
+static server_connection_t * _server_connection = NULL;
 
 ////////////////////////////////////////////////////////
 
@@ -58,6 +61,8 @@ server_connection_t * server_connection_new(int port)
 
   server_conn->rooms = list_new();
   server_conn->clients = list_new();
+
+  _server_connection = server_conn;
 
   return server_conn;
 }
