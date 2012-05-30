@@ -10,6 +10,7 @@
 #include "client.h"
 #include "../common/list.h"
 #include "../common/output.h"
+#include "../client/messages.h"
 
 struct server_connection {
   int sock;
@@ -77,16 +78,22 @@ bool connection_close(server_connection_t * server_conn)
 
 void server_connection_handle_incoming(server_connection_t * server_conn)
 {
-    struct timeval timeout;
-
-    timeout.tv_sec = 5;
-    timeout.tv_usec = 0;
-
-    select(0, NULL, NULL, NULL, &timeout);
   /* TODO:
      - recvfrom(server_conn->sock);
      - dispatch messages to connected clients on same chat_room
      - ?
    */
-}
 
+  /* int bytes_read; */
+  /* char * buf, * tmp; */
+  /* size_t len; */
+  /* char type; */
+  /* client_message_t * incoming_message = NULL; */
+  /* struct sockaddr_in * incoming_addr; */
+
+  /* buf = calloc(MAX_CLIENT_MSG_SIZE, sizeof(char)); */
+
+  /* bytes_read = recvfrom(server_conn->sock, buf, sizeof(buf), 0, */
+  /*                       (struct sockaddr *) incoming_addr, */
+  /*                       (socklen_t *) sizeof(struct sockaddr_in)); */
+}

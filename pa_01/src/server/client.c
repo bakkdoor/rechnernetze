@@ -7,6 +7,7 @@
 struct client {
   chat_user_t * chat_user;
   struct sockaddr_in * addr;
+  int sock;
 };
 
 client_t * client_new(chat_user_t * chat_user, struct sockaddr_in * client_addr) {
@@ -20,6 +21,18 @@ client_t * client_new(chat_user_t * chat_user, struct sockaddr_in * client_addr)
   client->addr->sin_family = AF_INET;
   client->addr->sin_port = 0;
   client->addr->sin_addr.s_addr = client_addr->sin_addr.s_addr;
+  client->sock = socket(AF_INET, SOCK_DGRAM, 0);
+  if (client->sock < 0) {
+    //TODO
+  }
+
+  /* if (bind(client->sock, (struct sockaddr *)client->addr, sizeof(struct sockaddr_in)) < 0) { */
+  /*   // TODO */
+  /* } */
+
+  /* if (getsockname(client->sock, (struct sockaddr *)client->addr, sizeof(struct sockaddr_in)) < 0) { */
+  /*   // TODO */
+  /* }; */
 
   return client;
 }
