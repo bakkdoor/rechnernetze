@@ -3,11 +3,6 @@
 #include "chat_room.h"
 #include "list.h"
 
-struct chat_room {
-  char * name;
-  list_t * users;
-};
-
 chat_room_t * chat_room_new(const char * name)
 {
   chat_room_t * room = calloc(1, sizeof(chat_room_t));

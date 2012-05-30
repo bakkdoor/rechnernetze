@@ -3,8 +3,10 @@
 
 #include "chat_user.h"
 
-struct chat_room;
-typedef struct chat_room chat_room_t;
+typedef struct chat_room {
+  char * name;
+  list_t * users;
+} chat_room_t;
 
 chat_room_t * chat_room_new(const char * name);
 void chat_room_delete(void * room);

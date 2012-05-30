@@ -9,7 +9,6 @@ struct client {
   struct sockaddr_in * addr;
 };
 
-
 client_t * client_new(chat_user_t * chat_user, struct sockaddr_in * client_addr) {
   client_t * client;
 
@@ -33,10 +32,4 @@ void client_delete(client_t * client) {
   chat_user_delete(client->chat_user);
   free(client->addr);
   free(client);
-}
-
-
-bool client_in_room(const client_t * client, const char * room) {
-  //TODO !!!!!!!!
-  return false;
 }

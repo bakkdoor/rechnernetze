@@ -5,11 +5,22 @@
 #include <stdbool.h>
 
 /*
+  Private struct definitions
+ */
+
+typedef struct node {
+  struct node *next;
+  void *data;
+} list_node_t;
+
+typedef struct list {
+  list_node_t *first;
+  size_t size;
+} list_t;
+
+/*
  Public List API
 */
-
-struct list;
-typedef struct list list_t;
 
 /**
  * @return New empty list.
@@ -92,6 +103,6 @@ list_t * list_map(const list_t * list, void * (* func)(void * a));
  * @param compare_func Function returning true for elements that match search.
  * @return First element in list for which compare_func returns true.
  **/
-void * list_find_first(const list_t * list, bool * (* compare_func)(void * a));
+void * list_find_first(const list_t * list, bool (* compare_func)(void * a));
 
 #endif /* _LIST_H_ */

@@ -3,11 +3,6 @@
 #include "chat_user.h"
 #include "chat_room.h"
 
-struct chat_user {
-  char * name;
-  list_t * rooms;
-};
-
 chat_user_t * chat_user_new(const char * name)
 {
   chat_user_t * user = calloc(1, sizeof(chat_user_t));
@@ -33,7 +28,7 @@ void chat_user_delete(void * _user)
   free(user);
 }
 
-list_t * chat_user_rooms(chat_user_t * user)
+list_t * chat_user_rooms(const chat_user_t * user)
 {
   if(!user)
     return NULL;
@@ -41,10 +36,20 @@ list_t * chat_user_rooms(chat_user_t * user)
   return user->rooms;
 }
 
-char * chat_user_name(chat_user_t * user)
+char * chat_user_name(const chat_user_t * user)
 {
   if(!user)
     return NULL;
 
   return user->name;
+}
+
+bool chat_user_in_room(const chat_user_t * user, const char * room_name)
+{
+  list_node_t * current = user->rooms->first;
+  for(; current; current = current->next) {
+    if(strcmp(((chat_room_t*)current->data)->name, room_name) == 0)
+      return true;
+  }
+  return false;
 }

@@ -2,20 +2,6 @@
 #include "list.h"
 
 /*
-  Private struct definitions
- */
-
-typedef struct node {
-  struct node *next;
-  void *data;
-} list_node_t;
-
-struct list {
-  list_node_t *first;
-  size_t size;
-};
-
-/*
   Private functions
  */
 
@@ -28,7 +14,6 @@ list_node_t * node_new(void * data)
   }
   return node;
 }
-
 
 /*
   Public functions
@@ -200,7 +185,7 @@ list_t * list_map(const list_t * list, void * (* func)(void * a))
   return new;
 }
 
-void * list_find_first(const list_t * list, bool * (* compare_func)(void * a))
+void * list_find_first(const list_t * list, bool (* compare_func)(void * a))
 {
   list_node_t * current = list->first;
   for(; current; current = current->next) {
