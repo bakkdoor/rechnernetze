@@ -26,19 +26,21 @@ client_t * client_new(chat_user_t * chat_user, struct sockaddr_in * client_addr)
     //TODO
   }
 
-  /* if (bind(client->sock, (struct sockaddr *)client->addr, sizeof(struct sockaddr_in)) < 0) { */
-  /*   // TODO */
-  /* } */
+  if (bind(client->sock, (struct sockaddr *)client->addr, sizeof(struct sockaddr_in)) < 0) {
+    // TODO
+  }
 
-  /* if (getsockname(client->sock, (struct sockaddr *)client->addr, sizeof(struct sockaddr_in)) < 0) { */
-  /*   // TODO */
-  /* }; */
+  if (getsockname(client->sock, (struct sockaddr *)client->addr, sizeof(struct sockaddr_in)) < 0) {
+    // TODO
+  };
 
   return client;
 }
 
 // list function to delete client connection
-void client_delete(client_t * client) {
+void client_delete(void * _client) {
+  client_t * client = _client;
+
   if(!client)
     return;
 
