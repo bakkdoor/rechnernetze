@@ -92,21 +92,42 @@ bool server_connection_close(server_connection_t * server_conn)
 
 void server_connection_handle_new_clients(server_connection_t * server_conn)
 {
-  /* int bytes_read; */
-  /* char * buf, * tmp; */
-  /* size_t len; */
-  /* char type; */
-  /* client_message_t * incoming_message = NULL; */
-  /* struct sockaddr_in * incoming_addr; */
-  /* client_t * client; */
+  char * buf;
+  int bytes_read;
+  client_message_t * message = NULL;
+  struct sockaddr_in * client_addr = calloc(1, sizeof(struct sockaddr_in));
+  client_t * client;
+  chat_user_t * chat_user;
 
-  /* buf = calloc(MAX_CLIENT_MSG_SIZE, sizeof(char)); */
 
-  /* bytes_read = recvfrom(server_conn->sock, buf, sizeof(buf), 0, */
-  /*                       (struct sockaddr *) incoming_addr, */
-  /*                       (socklen_t *) sizeof(struct sockaddr_in)); */
+  buf = calloc(MAX_CLIENT_MSG_SIZE, sizeof(char));
 
-  /* list_insert(server_conn->clients, client); */
+  bytes_read = recvfrom(client->sock, buf, sizeof(buf), 0,
+                        (struct sockaddr *) client->addr,
+                        (socklen_t *) sizeof(struct sockaddr_in));
+
+  if(bytes_read < 1) {
+    free(buf);
+    free(client_addr);
+    return;
+  }
+
+  message = client_message_read(buf);
+  free(buf);
+
+  switch (message->type) {
+  case CL_CON_REQ:
+    chat_user = chat_user_new(message->cl_con_req.name);
+    client = client_new(chat_user, client_addr);
+    list_insert(server_conn->clients, client);
+    break;
+  default:
+    error(false, "Invalid initial request type: %d", message->type);
+    return;
+  }
+
+  client_message_delete(message);
+  free(buf);
 }
 
 static fd_set _read_fds;
