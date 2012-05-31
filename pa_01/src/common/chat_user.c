@@ -24,7 +24,7 @@ void chat_user_delete(void * _user)
     return;
 
   free(user->name);
-  list_delete(user->rooms, chat_room_delete);
+  list_delete(user->rooms, NULL);
   free(user);
 }
 
