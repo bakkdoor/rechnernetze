@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <arpa/inet.h>
 
 #include "client.h"
@@ -7,6 +8,7 @@
 
 client_t * client_new(chat_user_t * chat_user, struct sockaddr_in * client_addr, int port) {
   client_t * client;
+  int slen = sizeof(struct sockaddr_in);
 
   client = calloc(1, sizeof(client_t));
   if (!client) {
@@ -14,13 +16,16 @@ client_t * client_new(chat_user_t * chat_user, struct sockaddr_in * client_addr,
     return NULL;
   }
   client->addr = calloc(1, sizeof(struct sockaddr_in));
+  if(!client->addr) {
+    error(false, "Could not create addr for new client");
+  }
 
   client->addr->sin_family = AF_INET;
-  client->addr->sin_port = port;
+  client->addr->sin_port = htons(port);
   client->addr->sin_addr.s_addr = client_addr->sin_addr.s_addr;
   client->sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if (client->sock < 0) {
-    //TODO
+    error(false, "Could not setup user-specific socket for user %s", chat_user->name);
   }
 
   if (bind(client->sock, (struct sockaddr *)client->addr, sizeof(struct sockaddr_in)) < 0) {
@@ -29,7 +34,7 @@ client_t * client_new(chat_user_t * chat_user, struct sockaddr_in * client_addr,
     info("User-specific port %d opened for user %s", port, chat_user->name);
   }
 
-  if (getsockname(client->sock, (struct sockaddr *)client->addr, sizeof(struct sockaddr_in)) < 0) {
+  if (getsockname(client->sock, (struct sockaddr *)client->addr, &slen) < 0) {
     perror("getsockname()");
     error(false, "getsockname() failed");
   }

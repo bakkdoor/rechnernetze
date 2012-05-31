@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <stdbool.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -24,15 +25,24 @@ struct server_connection {
   int last_port;
 };
 
+typedef struct client_with_message {
+  const client_t * client;
+  client_message_t * msg;
+} client_with_message_t;
+
+void _client_with_message_delete(void * _cwm)
+{
+  client_with_message_t * cwm = _cwm;
+  if(!cwm)
+    return;
+
+  client_message_delete(cwm->msg);
+  free(cwm);
+}
+
 static server_connection_t * _server_connection = NULL;
 
 ////////////////////////////////////////////////////////
-
-int read_sock(int sock, char * buf, struct sockaddr_in * client_addr)
-{
-  int slen = sizeof(struct sockaddr_in);
-  return recvfrom(sock, buf, MAX_CLIENT_MSG_SIZE, 0, client_addr, &slen);
-}
 
 server_connection_t * server_connection_new(int port)
 {
@@ -107,14 +117,13 @@ void server_connection_handle_new_clients(server_connection_t * server_conn)
   client_t * client;
   chat_user_t * chat_user;
   int client_comm_port;
+  int slen = sizeof(struct sockaddr_in);
   struct sockaddr_in * client_addr = calloc(1, sizeof(struct sockaddr_in));
   buf = calloc(MAX_CLIENT_MSG_SIZE, sizeof(char));
 
-  /* bytes_read = recvfrom(server_conn->sock, buf, MAX_CLIENT_MSG_SIZE, 0, */
-  /*                       (struct sockaddr *) client_addr, */
-  /*                       (socklen_t *) sizeof(struct sockaddr_in)); */
-
-  bytes_read = read_sock(server_conn->sock, buf, client_addr);
+  bytes_read = recvfrom(server_conn->sock, buf, MAX_CLIENT_MSG_SIZE, 0,
+                        (struct sockaddr *) client_addr,
+                        (socklen_t *) &slen);
 
   if(bytes_read < 1) {
     perror("recvfrom()");
@@ -141,12 +150,14 @@ void server_connection_handle_new_clients(server_connection_t * server_conn)
   client = client_new(chat_user, client_addr, client_comm_port);
   list_insert(server_conn->clients, client);
 
+  info("New user connected with name: %s", chat_user->name);
+
   /* send reply to client with new port number */
 
   server_message_t reply;
   reply.type = SV_CON_REP;
-  reply.sv_con_rep.state = htonl(CON_REP_OK);
-  reply.sv_con_rep.comm_port = htonl(client_comm_port);
+  reply.sv_con_rep.state = CON_REP_OK;
+  reply.sv_con_rep.comm_port = client_comm_port;
 
   client_send_message(client, &reply);
 
@@ -166,22 +177,43 @@ bool client_in_fdset(const void * _client)
   return FD_ISSET(client->sock, &_read_fds);
 }
 
-void server_connection_handle_message(client_message_t * client_message)
+void server_connection_handle_message(server_connection_t * server_conn, client_with_message_t * cwm)
 {
  /*
     TODO:
     dispatch logic (send messages to all users in same room etc
  */
+
+  info("Got message with type: %d", cwm->msg->type);
+
+  switch(cwm->msg->type) {
+  case CL_ROOM_MSG:
+
+    break;
+
+  case CL_MSG:
+    break;
+
+  case CL_DISC_REQ:
+    break;
+
+  default:
+    break;
+  }
 }
 
-void _server_connection_handle_message(void * client_message)
+void _server_connection_handle_message(void * client_with_message)
 {
-  server_connection_handle_message((client_message_t *)client_message);
+  server_connection_handle_message(_server_connection, (client_with_message_t *)client_with_message);
 }
 
-void * _client_read_message(const void * client)
+void * _client_read_message(const void * _client)
 {
-  return client_read_message((client_t *)client);
+  const client_t * client = _client;
+  client_with_message_t  * cwm = calloc(1, sizeof(client_with_message_t));
+  cwm->msg = client_read_message(client);
+  cwm->client = client;
+  return cwm;
 }
 
 void server_connection_handle_client_messages(server_connection_t * server_conn)
@@ -203,7 +235,7 @@ void server_connection_handle_client_messages(server_connection_t * server_conn)
     list_t * incoming_messages = list_map(clients_with_data, _client_read_message);
     list_foreach(incoming_messages, _server_connection_handle_message);
     list_delete(clients_with_data, NULL);
-    list_delete(incoming_messages, _client_message_delete);
+    list_delete(incoming_messages, _client_with_message_delete);
   }
 }
 
