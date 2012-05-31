@@ -11,6 +11,7 @@ client_t * client_new(chat_user_t * chat_user, struct sockaddr_in * client_addr,
   if (!client) {
     //TODO
   }
+  client->addr = calloc(1, sizeof(struct sockaddr_in));
 
   client->addr->sin_family = AF_INET;
   client->addr->sin_port = port;
