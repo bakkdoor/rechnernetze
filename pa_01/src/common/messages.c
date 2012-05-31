@@ -14,30 +14,30 @@ unsigned int read_int(char * buf, size_t n_bytes)
 {
   unsigned int length;
   memcpy(&length, buf, n_bytes);
+  if(n_bytes == 1) {
+    return length;
+  }
   return ntohl(length);
 }
 
 char * read_string(char * buf, size_t length)
 {
-  char * str;
   char * tmp = calloc(length, sizeof(char));
   memcpy(tmp, buf, length);
-  /* str = net_to_str(tmp); */
-  /* free(tmp); */
   return tmp;
 }
 
 void write_int(void * buf, unsigned int i, size_t n_bytes)
 {
   unsigned int net_int = htonl(i);
+  if(n_bytes == 1) {
+    net_int = i;
+  }
   memcpy(buf, &net_int, n_bytes);
 }
 
 void write_string(void * buf, char * str, size_t length)
 {
-  /* char * net_str = str_to_net(str); */
-  /* memcpy(buf, net_str, length); */
-  /* free(net_str); */
   memcpy(buf, str, length);
 }
 
