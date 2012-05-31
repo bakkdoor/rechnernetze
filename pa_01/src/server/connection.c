@@ -144,7 +144,6 @@ void server_connection_handle_new_clients(server_connection_t * server_conn)
   client_send_message(client, &reply);
 
   client_message_delete(message);
-  free(buf);
 }
 
 static fd_set _read_fds;
