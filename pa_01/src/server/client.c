@@ -3,31 +3,36 @@
 
 #include "client.h"
 #include "../common/chat_user.h"
+#include "../common/output.h"
 
 client_t * client_new(chat_user_t * chat_user, struct sockaddr_in * client_addr, int port) {
   client_t * client;
 
   client = calloc(1, sizeof(client_t));
   if (!client) {
-    //TODO
+    error(false, "Could not create new client");
+    return NULL;
   }
   client->addr = calloc(1, sizeof(struct sockaddr_in));
 
   client->addr->sin_family = AF_INET;
   client->addr->sin_port = port;
   client->addr->sin_addr.s_addr = client_addr->sin_addr.s_addr;
-  client->sock = socket(AF_INET, SOCK_DGRAM, 0);
+  client->sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if (client->sock < 0) {
     //TODO
   }
 
   if (bind(client->sock, (struct sockaddr *)client->addr, sizeof(struct sockaddr_in)) < 0) {
-    // TODO
+    error(false, "Could not bind on user-specific port %d for user %s", port, chat_user->name);
+  } else {
+    info("User-specific port %d opened for user %s", port, chat_user->name);
   }
 
   if (getsockname(client->sock, (struct sockaddr *)client->addr, sizeof(struct sockaddr_in)) < 0) {
-    // TODO
-  };
+    perror("getsockname()");
+    error(false, "getsockname() failed");
+  }
 
   return client;
 }

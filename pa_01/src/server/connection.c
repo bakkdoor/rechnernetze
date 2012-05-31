@@ -5,7 +5,6 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-
 #include "connection.h"
 #include "client.h"
 #include "../common/list.h"
