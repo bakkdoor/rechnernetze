@@ -219,8 +219,15 @@ void server_connection_handle_message(server_connection_t * server_conn, client_
   client_t * client = cwm->client;
   chat_room_t * room;
   server_message_t * reply;
+  list_node_t * current;
 
   info("Got message with type: %d", cwm->msg->type);
+
+  reply = calloc(1, sizeof(server_message_t));
+  if(!reply) {
+    error(false, "Could not create reply message");
+    return;
+  }
 
   switch(msg->type) {
   case CL_ROOM_MSG:
@@ -237,12 +244,8 @@ void server_connection_handle_message(server_connection_t * server_conn, client_
       list_insert(client->chat_user->rooms, room);
     }
 
-    reply = calloc(1, sizeof(server_message_t));
-    if(!reply) {
-      error(false, "Could not create reply message");
-      return;
-    }
 
+    reply->type = SV_ROOM_MSG;
     reply->sv_room_msg.room_length = strlen(room->name) + 1;
     reply->sv_room_msg.room = room->name;
     reply->sv_room_msg.user_length = strlen(client->chat_user->name) + 1;
@@ -252,13 +255,42 @@ void server_connection_handle_message(server_connection_t * server_conn, client_
     break;
 
   case CL_MSG:
+    reply->type = SV_AMSG;
+    reply->sv_amsg.room_length = msg->cl_msg.room_length;
+    reply->sv_amsg.room = msg->cl_msg.room_name;
+    reply->sv_amsg.user_length = strlen(client->chat_user->name) + 1;
+    reply->sv_amsg.user = client->chat_user->name;
+    reply->sv_amsg.msg_length = msg->cl_msg.msg_length;
+    reply->sv_amsg.msg = msg->cl_msg.message;
+
+    server_connection_room_broadcast(server_conn, reply, msg->cl_msg.room_name);
     break;
 
   case CL_DISC_REQ:
+    reply->type = SV_DISC_REP;
+    client_send_message(client, reply);
+
+    /* todo: sent disc_amsg to all rooms of client */
+    server_message_delete(reply);
+
+    reply = calloc(1, sizeof(server_message_t));
+    reply->type = SV_DISC_AMSG;
+    current = client->chat_user->rooms;
+    for(; current; current = current->next) {
+      room = current->data;
+      server_connection_room_broadcast(server_conn, reply, room->name);
+      list_delete(room->users, client->chat_user); /* remove from room */
+    }
+
+    client_delete(client);
+
+    /* remove user from rooms */
     break;
 
   default:
     break;
+
+    server_message_delete(reply);
   }
 }
 
