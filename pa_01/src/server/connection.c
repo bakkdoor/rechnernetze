@@ -29,16 +29,26 @@ static server_connection_t * _server_connection = NULL;
 
 ////////////////////////////////////////////////////////
 
+int read_sock(int sock, char * buf, struct sockaddr_in * client_addr)
+{
+  int slen = sizeof(struct sockaddr_in);
+  return recvfrom(sock, buf, MAX_CLIENT_MSG_SIZE, 0, client_addr, &slen);
+}
+
 server_connection_t * server_connection_new(int port)
 {
   int sockfd, err;
-  struct sockaddr_in * addr;
-
+  struct sockaddr_in * addr = calloc(1, sizeof(struct sockaddr_in));
   server_connection_t * server_conn = calloc(1, sizeof(server_connection_t));
+
+  if(!addr) {
+    error(true, "Could not setup sockaddr_in struct");
+  }
+
   if(!server_conn)
     return NULL;
 
-  sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+  sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if(sockfd < 0) {
     error(true, "Could not setup server socket");
   }
@@ -47,10 +57,6 @@ server_connection_t * server_connection_new(int port)
   server_conn->port = port;
   server_conn->last_port = port;
 
-  addr = calloc(1, sizeof(struct sockaddr_in));
-  if(!addr) {
-    error(true, "Could not setup sockaddr_in struct");
-  }
 
   addr->sin_family = AF_INET;
   addr->sin_port = htons(port);
@@ -58,6 +64,7 @@ server_connection_t * server_connection_new(int port)
 
   err = bind(sockfd, (struct sockaddr *) addr, sizeof(struct sockaddr_in));
   if(err < 0) {
+    perror("bind()");
     error(true, "Could not bind on port");
   }
 
@@ -102,15 +109,16 @@ void server_connection_handle_new_clients(server_connection_t * server_conn)
   chat_user_t * chat_user;
   int client_comm_port;
   struct sockaddr_in * client_addr = calloc(1, sizeof(struct sockaddr_in));
-
-
   buf = calloc(MAX_CLIENT_MSG_SIZE, sizeof(char));
 
-  bytes_read = recvfrom(server_conn->sock, buf, MAX_CLIENT_MSG_SIZE, 0,
-                        (struct sockaddr *) client_addr,
-                        (socklen_t *) sizeof(struct sockaddr_in));
+  /* bytes_read = recvfrom(server_conn->sock, buf, MAX_CLIENT_MSG_SIZE, 0, */
+  /*                       (struct sockaddr *) client_addr, */
+  /*                       (socklen_t *) sizeof(struct sockaddr_in)); */
+
+  bytes_read = read_sock(server_conn->sock, buf, client_addr);
 
   if(bytes_read < 1) {
+    perror("recvfrom()");
     free(buf);
     free(client_addr);
     return;
