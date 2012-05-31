@@ -68,13 +68,6 @@ int client_send_message(client_t * client, server_message_t * message)
                       (struct sockaddr *) client->addr,
                       sizeof(struct sockaddr_in));
 
-  for(i = 0; i < len; i++) {
-    printf("%d ", buf[i]);
-  }
-  puts("");
-
-  info("bytes sent: %d", bytes_sent);
-
   free(buf); /* ?!?! TODO: Check if OK here. */
   return bytes_sent;
 }
