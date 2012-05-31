@@ -22,9 +22,9 @@ char * read_string(char * buf, size_t length)
   char * str;
   char * tmp = calloc(length, sizeof(char));
   memcpy(tmp, buf, length);
-  str = net_to_str(tmp);
-  free(tmp);
-  return str;
+  /* str = net_to_str(tmp); */
+  /* free(tmp); */
+  return tmp;
 }
 
 void write_int(void * buf, unsigned int i, size_t n_bytes)
