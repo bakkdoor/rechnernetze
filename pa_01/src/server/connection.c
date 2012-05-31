@@ -5,6 +5,8 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <string.h>
+#include <fcntl.h>
 
 #include "connection.h"
 #include "client.h"
@@ -17,12 +19,12 @@
 
 struct server_connection {
   int sock;
-  int port;
+  unsigned int port;
   struct sockaddr_in * addr;
   list_t  * rooms;
   list_t  * clients;
   int clients_nfds;
-  int last_port;
+  unsigned int last_port;
 };
 
 typedef struct client_with_message {
@@ -82,6 +84,8 @@ server_connection_t * server_connection_new(int port)
   server_conn->rooms = list_new();
   server_conn->clients = list_new();
 
+  fcntl(server_conn->sock, F_SETFL, O_NONBLOCK);
+
   _server_connection = server_conn;
 
   return server_conn;
@@ -118,7 +122,9 @@ void server_connection_handle_new_clients(server_connection_t * server_conn)
   chat_user_t * chat_user;
   int client_comm_port;
   int slen = sizeof(struct sockaddr_in);
+  int tmp_sock;
   struct sockaddr_in * client_addr = calloc(1, sizeof(struct sockaddr_in));
+  struct sockaddr_in * tmp_addr;
   buf = calloc(MAX_CLIENT_MSG_SIZE, sizeof(char));
 
   bytes_read = recvfrom(server_conn->sock, buf, MAX_CLIENT_MSG_SIZE, 0,
@@ -126,7 +132,6 @@ void server_connection_handle_new_clients(server_connection_t * server_conn)
                         (socklen_t *) &slen);
 
   if(bytes_read < 1) {
-    perror("recvfrom()");
     free(buf);
     free(client_addr);
     return;
@@ -137,6 +142,7 @@ void server_connection_handle_new_clients(server_connection_t * server_conn)
 
   if(message->type != CL_CON_REQ) {
     error(false, "Invalid initial request type: %d", message->type);
+    client_message_delete(message);
     return;
   }
 
@@ -159,9 +165,27 @@ void server_connection_handle_new_clients(server_connection_t * server_conn)
   reply.sv_con_rep.state = CON_REP_OK;
   reply.sv_con_rep.comm_port = client_comm_port;
 
+  buf = calloc(1, MAX_SERVER_MSG_SIZE);
+  if(!buf) {
+    error(false, "Could not allocate reponse buffer");
+    client_message_delete(message);
+    return;
+  }
+
+  /* set client sock to server sock temporarily
+     so we can send the connect reply message back to where the client
+     is expecting it.
+   */
+  tmp_sock = client->sock;
+  tmp_addr = client->addr;
+  client->addr = client_addr;
+  client->sock = server_conn->sock;
   client_send_message(client, &reply);
+  client->sock = tmp_sock;
+  client->addr = tmp_addr;
 
   client_message_delete(message);
+  free(buf);
 }
 
 static fd_set _read_fds;
@@ -177,6 +201,13 @@ bool client_in_fdset(const void * _client)
   return FD_ISSET(client->sock, &_read_fds);
 }
 
+static char * _room_name;
+bool _room_with_name(const void * _room)
+{
+  const chat_room_t * room = _room;
+  return strcmp(room->name, _room_name) == 0;
+}
+
 void server_connection_handle_message(server_connection_t * server_conn, client_with_message_t * cwm)
 {
  /*
@@ -184,11 +215,40 @@ void server_connection_handle_message(server_connection_t * server_conn, client_
     dispatch logic (send messages to all users in same room etc
  */
 
+  client_message_t * msg = cwm->msg;
+  client_t * client = cwm->client;
+  chat_room_t * room;
+  server_message_t * reply;
+
   info("Got message with type: %d", cwm->msg->type);
 
-  switch(cwm->msg->type) {
+  switch(msg->type) {
   case CL_ROOM_MSG:
+    _room_name = msg->cl_room_msg.room_name;
+    info("User %s joining room %s", client->chat_user->name, _room_name);
+    room = list_find_first(server_conn->rooms, _room_with_name);
+    if(room) {
+      list_insert(client->chat_user->rooms, room);
+      list_insert(server_conn->rooms, room);
+    } else {
+      room = chat_room_new(msg->cl_room_msg.room_name);
+      chat_room_add_user(room, client->chat_user);
+      list_insert(server_conn->rooms, room);
+      list_insert(client->chat_user->rooms, room);
+    }
 
+    reply = calloc(1, sizeof(server_message_t));
+    if(!reply) {
+      error(false, "Could not create reply message");
+      return;
+    }
+
+    reply->sv_room_msg.room_length = strlen(room->name) + 1;
+    reply->sv_room_msg.room = room->name;
+    reply->sv_room_msg.user_length = strlen(client->chat_user->name) + 1;
+    reply->sv_room_msg.user = client->chat_user->name;
+
+    server_connection_room_broadcast(server_conn, reply, room->name);
     break;
 
   case CL_MSG:
@@ -243,4 +303,16 @@ void server_connection_handle_incoming(server_connection_t * server_conn)
 {
   server_connection_handle_new_clients(server_conn);
   server_connection_handle_client_messages(server_conn);
+}
+
+void server_connection_room_broadcast(server_connection_t * server_conn, server_message_t * msg, char * room)
+{
+  client_t * client;
+  list_node_t * node = server_conn->clients->first;
+  for(; node; node = node->next) {
+    client = node->data;
+    if(chat_user_in_room(client->chat_user, room)) {
+      client_send_message(client, msg);
+    }
+  }
 }

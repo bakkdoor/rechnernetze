@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <arpa/inet.h>
+#include <fcntl.h>
 
 #include "client.h"
 #include "../common/chat_user.h"
@@ -39,6 +40,8 @@ client_t * client_new(chat_user_t * chat_user, struct sockaddr_in * client_addr,
     error(false, "getsockname() failed");
   }
 
+  fcntl(client->sock, F_SETFL, O_NONBLOCK);
+
   return client;
 }
 
@@ -54,9 +57,26 @@ void client_delete(void * _client) {
   free(client);
 }
 
-void client_send_message(client_t * client, server_message_t * message)
+int client_send_message(client_t * client, server_message_t * message)
 {
-  /* TODO: write into buf, then send buffer over via client->sock */
+  int bytes_sent;
+  int i;
+  char * buf = calloc(MAX_SERVER_MSG_SIZE, sizeof(char));
+  size_t len = server_message_write(message, buf);
+
+  bytes_sent = sendto(client->sock, buf, len, 0,
+                      (struct sockaddr *) client->addr,
+                      sizeof(struct sockaddr_in));
+
+  for(i = 0; i < len; i++) {
+    printf("%d ", buf[i]);
+  }
+  puts("");
+
+  info("bytes sent: %d", bytes_sent);
+
+  free(buf); /* ?!?! TODO: Check if OK here. */
+  return bytes_sent;
 }
 
 client_message_t * client_read_message(const client_t * client)

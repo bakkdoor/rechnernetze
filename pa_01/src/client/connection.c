@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
 
 #include "connection.h"
 #include "../common/output.h"
@@ -67,6 +68,8 @@ client_connection_t * connection_setup(const char * server_hostname, int server_
     cli_conn->server_addr->sin_addr.s_addr = inet_addr(server_hostname);
   }
 
+  fcntl(cli_conn->sock, F_SETFL, O_NONBLOCK); /* set nonblocking and use select() */
+
   cli_conn->server_addr->sin_family = AF_INET;
   cli_conn->server_addr->sin_port = htons(server_port);
   cli_conn->username = username;
@@ -80,7 +83,7 @@ client_connection_t * connection_setup(const char * server_hostname, int server_
 
     connection_send_client_message(cli_conn, &message);
     if (connection_has_incoming_data(cli_conn->sock, DEFAULT_TIMEOUT_SEC) > 0) {
-      reply_msg = connection_recv_client_message(cli_conn);
+      reply_msg = connection_recv_client_message(cli_conn, false);
       if (reply_msg) {
         if (reply_msg->type == SV_CON_REP) {
           if (reply_msg->sv_con_rep.state == CON_REP_OK) {
@@ -88,6 +91,7 @@ client_connection_t * connection_setup(const char * server_hostname, int server_
                    reply_msg->sv_con_rep.comm_port);
 
             //cli_conn->server_addr->sin_port = htons(reply_msg->sv_con_rep.comm_port);
+            cli_conn->incoming_addr = calloc(1, sizeof(struct sockaddr_in));
             cli_conn->incoming_addr->sin_family = AF_INET;
             cli_conn->incoming_addr->sin_addr.s_addr = htonl(INADDR_ANY);
             cli_conn->incoming_addr->sin_port = htons(reply_msg->sv_con_rep.comm_port);
@@ -101,6 +105,8 @@ client_connection_t * connection_setup(const char * server_hostname, int server_
               // can not bind socket at this port!!!
               // TODO
             }
+
+            fcntl(cli_conn->incoming_sock, F_SETFL, O_NONBLOCK);
 
           } else if (reply_msg->sv_con_rep.state == CON_REP_BAD_USERNAME) {
             info("Verbindung fehlgeschlagen. Benutzername %s bereits vergeben.", username);
@@ -149,7 +155,7 @@ int connection_close(client_connection_t * cli_conn)
 
       while(connection_has_incoming_data(cli_conn->incoming_sock, DEFAULT_TIMEOUT_SEC) > 0) {
 
-        reply_msg = connection_recv_client_message(cli_conn);
+        reply_msg = connection_recv_client_message(cli_conn, true);
         if (reply_msg) {
           if (reply_msg->type == SV_DISC_REP) {
             info("Verbindung erfolgreich beendet.");
@@ -192,18 +198,20 @@ int connection_send_client_message(client_connection_t * cli_conn, client_messag
   return bytes_send;
 }
 
-server_message_t * connection_recv_client_message(client_connection_t * cli_conn)
+server_message_t * connection_recv_client_message(client_connection_t * cli_conn, bool incoming)
 {
   char * buf;
   /* size_t len; */
   int bytes_read;
   server_message_t * incoming_message = NULL;
+  int slen = sizeof(struct sockaddr_in);
+  int sock = incoming ? cli_conn->incoming_sock : cli_conn->sock;
 
   buf = calloc(MAX_SERVER_MSG_SIZE, sizeof(char));
 
-  bytes_read = recvfrom(cli_conn->incoming_sock, buf, sizeof(buf), 0,
+  bytes_read = recvfrom(sock, buf, sizeof(buf), 0,
                         (struct sockaddr *) cli_conn->incoming_addr,
-                        (socklen_t *) sizeof(struct sockaddr_in));
+                        (socklen_t *) &slen);
 
   if (bytes_read < 1) {
     free(buf);

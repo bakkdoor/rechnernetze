@@ -14,7 +14,7 @@ unsigned int read_int(char * buf, size_t n_bytes)
 {
   unsigned int length;
   memcpy(&length, buf, n_bytes);
-  return ntohs(length);
+  return ntohl(length);
 }
 
 char * read_string(char * buf, size_t length)
@@ -29,7 +29,7 @@ char * read_string(char * buf, size_t length)
 
 void write_int(void * buf, unsigned int i, size_t n_bytes)
 {
-  unsigned int net_int = htons(i);
+  unsigned int net_int = htonl(i);
   memcpy(buf, &net_int, n_bytes);
 }
 
