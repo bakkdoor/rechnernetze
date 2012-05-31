@@ -45,7 +45,7 @@ client_connection_t * connection_setup(const char * server_hostname, int server_
     error(true, "Could not allocate memory!");
   }
 
-  cli_conn->sock = socket(AF_INET, SOCK_DGRAM, 0);
+  cli_conn->sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if (cli_conn->sock < 0) {
     error(true, "Could not create socket!");
   }
