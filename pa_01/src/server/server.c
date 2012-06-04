@@ -47,7 +47,7 @@ int main(int argc, char ** argv)
     error(true, "Could not create server connection.");
     return 1;
   }
-
+  
   Running = true;
 
   while(Running) {

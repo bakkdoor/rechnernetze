@@ -31,7 +31,7 @@ int main(int argc, char ** argv)
     return 1;
   }
 
-  cli_conn = connection_setup(argv[1], atoi(argv[2]), argv[3]);
+  cli_conn = connection_setup(argv[1], argv[2], argv[3]);
   if (!cli_conn) {
     return 1;
   }
