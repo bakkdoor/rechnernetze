@@ -246,7 +246,6 @@ void _server_message_delete(void * server_message)
 
 server_message_t * server_message_read(char * buf)
 {
-  char type;
   unsigned int length = 0;
   server_message_t * message = calloc(1, sizeof(server_message_t));
 
@@ -259,7 +258,7 @@ server_message_t * server_message_read(char * buf)
   buf++;
 
   /* TODO: */
-  switch(type) {
+  switch(message->type) {
   case SV_CON_REP:
     message->sv_con_rep.state = read_byte(buf);
     buf++;
@@ -320,7 +319,7 @@ server_message_t * server_message_read(char * buf)
     break;
 
   default:
-    error(false, "Unknown incoming message type: %d", type);
+    error(false, "Unknown incoming message type: %u", message->type);
     assert(0);
     break;
   }
