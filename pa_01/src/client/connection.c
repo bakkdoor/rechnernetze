@@ -175,7 +175,6 @@ server_message_t * connection_recv_client_message(client_connection_t * cli_conn
 int connection_has_incoming_data(client_connection_t * cli_conn, int timeout_sec) {
   fd_set read_fds;
   struct timeval timeout;
-  int count;
 
   if (!cli_conn->sock) return 0;
 
@@ -185,8 +184,7 @@ int connection_has_incoming_data(client_connection_t * cli_conn, int timeout_sec
   FD_ZERO(&read_fds);
   FD_SET(cli_conn->sock, &read_fds);
 
-  count = select(cli_conn->sock + 1, &read_fds, NULL, NULL, &timeout);
-  return count;
+  return select(cli_conn->sock + 1, &read_fds, NULL, NULL, &timeout);
 }
 
 client_message_t * parse_client_message(const char * buf)
