@@ -71,7 +71,7 @@ client_connection_t * connection_setup(const char * server_hostname, const char 
 #ifdef DEBUG
   addr = (struct sockaddr_in *) cli_conn->server_addr_info->ai_addr;
 
-  printf("hostname: %s, ip: %s, port: %u\n",
+  info("hostname: %s, ip: %s, port: %u",
           cli_conn->server_addr_info->ai_canonname,
           inet_ntoa(addr->sin_addr),
           ntohs(addr->sin_port));
@@ -118,7 +118,7 @@ client_connection_t * connection_setup(const char * server_hostname, const char 
         if (response->sv_con_rep.state == CON_REP_OK) {
           addr = (struct sockaddr_in *) cli_conn->server_addr_info->ai_addr;
           addr->sin_port = response->sv_con_rep.comm_port;
-          cli_conn->server_addr_info->ai_addr = addr;
+          cli_conn->server_addr_info->ai_addr = (struct sockaddr *)addr;
 
           info("Verbindung akzeptiert. Der Port für die weitere Kommunikation lautet %u.", ntohs(addr->sin_port));
 

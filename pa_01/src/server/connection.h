@@ -1,6 +1,7 @@
 #ifndef _SERVER_CONNECTION_H_
 #define _SERVER_CONNECTION_H_
 
+#include <netinet/in.h>
 #include "../common/messages.h"
 
 typedef struct server_connection server_connection_t;
