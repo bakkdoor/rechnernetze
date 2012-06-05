@@ -12,6 +12,11 @@ client_t * client_new(chat_user_t * chat_user, struct sockaddr_in * client_addr)
   unsigned int slen = sizeof(struct sockaddr_in);
   struct sockaddr_in addr;
 
+  if(!chat_user) {
+    error(false, "No chat user given");
+    return NULL;
+  }
+
   client = calloc(1, sizeof(client_t));
   if (!client) {
     error(false, "Could not create new client");
@@ -49,6 +54,8 @@ client_t * client_new(chat_user_t * chat_user, struct sockaddr_in * client_addr)
   }
 
   fcntl(client->sock, F_SETFL, O_NONBLOCK);
+
+  client->chat_user = chat_user;
 
   return client;
 }
