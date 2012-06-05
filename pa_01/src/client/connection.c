@@ -106,9 +106,9 @@ client_connection_t * connection_setup(const char * server_hostname, const char 
   }
 
   for (count = 0; count < 3; count++) {
-    if (connection_send_client_message(cli_conn, message) > 0
-            && connection_has_incoming_data(cli_conn, DEFAULT_TIMEOUT_SEC)) {
-
+    if (connection_send_client_message(cli_conn, message) > 0 
+            && connection_has_incoming_data(cli_conn, DEFAULT_TIMEOUT_SEC) > 0) {
+      
       response = connection_recv_client_message(cli_conn);
       if (!response) {
         break;
@@ -147,9 +147,12 @@ void connection_delete(client_connection_t * cli_conn) {
 
 int connection_send_client_message(client_connection_t * cli_conn, client_message_t * msg) {
   char buff[MAX_CLIENT_MSG_SIZE];
-  size_t length  = client_message_write(msg, buff);
-
-  return sendto(cli_conn->sock, buff, length, 0,
+  size_t length;
+  
+  memset(buff, 0, MAX_SERVER_MSG_SIZE);
+  length  = client_message_write(msg, buff);
+  
+  return sendto(cli_conn->sock, buff, length, 0, 
         (struct sockaddr *) cli_conn->server_addr_info->ai_addr,
         sizeof(struct sockaddr));
 }
@@ -157,12 +160,16 @@ int connection_send_client_message(client_connection_t * cli_conn, client_messag
 server_message_t * connection_recv_client_message(client_connection_t * cli_conn) {
   char buff[MAX_SERVER_MSG_SIZE];
   unsigned int slen = sizeof(struct sockaddr);
-
-  if (recvfrom(cli_conn->sock, buff, sizeof(buff), 0,
-               (struct sockaddr *)cli_conn->server_addr_info->ai_addr, &slen) > 0) {
-    return server_message_read(buff);
+  
+  memset(buff, 0, MAX_SERVER_MSG_SIZE);
+  if (recvfrom(cli_conn->sock, buff, sizeof(buff), 0,  
+        (struct sockaddr *)cli_conn->server_addr_info->ai_addr, &slen) < 0) {
+/*
+    perror("recvfrom()");
+*/
+    return NULL;
   }
-  return NULL;
+  return server_message_read(buff);
 }
 
 int connection_has_incoming_data(client_connection_t * cli_conn, int timeout_sec) {
