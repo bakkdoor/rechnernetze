@@ -106,9 +106,9 @@ client_connection_t * connection_setup(const char * server_hostname, const char 
   }
 
   for (count = 0; count < 3; count++) {
-    if (connection_send_client_message(cli_conn, message) > 0 
+    if (connection_send_client_message(cli_conn, message) > 0
             && connection_has_incoming_data(cli_conn, DEFAULT_TIMEOUT_SEC) > 0) {
-      
+
       response = connection_recv_client_message(cli_conn);
       if (!response) {
         break;
@@ -117,7 +117,7 @@ client_connection_t * connection_setup(const char * server_hostname, const char 
       if (response->type == SV_CON_REP) {
         if (response->sv_con_rep.state == CON_REP_OK) {
           addr = (struct sockaddr_in *) cli_conn->server_addr_info->ai_addr;
-          addr->sin_port = response->sv_con_rep.comm_port;
+          addr->sin_port = ntohs(response->sv_con_rep.comm_port);
           cli_conn->server_addr_info->ai_addr = addr;
 
           info("Verbindung akzeptiert. Der Port für die weitere Kommunikation lautet %u.", ntohs(addr->sin_port));
@@ -148,11 +148,11 @@ void connection_delete(client_connection_t * cli_conn) {
 int connection_send_client_message(client_connection_t * cli_conn, client_message_t * msg) {
   char buff[MAX_CLIENT_MSG_SIZE];
   size_t length;
-  
+
   memset(buff, 0, MAX_SERVER_MSG_SIZE);
   length  = client_message_write(msg, buff);
-  
-  return sendto(cli_conn->sock, buff, length, 0, 
+
+  return sendto(cli_conn->sock, buff, length, 0,
         (struct sockaddr *) cli_conn->server_addr_info->ai_addr,
         sizeof(struct sockaddr));
 }
@@ -160,9 +160,9 @@ int connection_send_client_message(client_connection_t * cli_conn, client_messag
 server_message_t * connection_recv_client_message(client_connection_t * cli_conn) {
   char buff[MAX_SERVER_MSG_SIZE];
   unsigned int slen = sizeof(struct sockaddr);
-  
+
   memset(buff, 0, MAX_SERVER_MSG_SIZE);
-  if (recvfrom(cli_conn->sock, buff, sizeof(buff), 0,  
+  if (recvfrom(cli_conn->sock, buff, sizeof(buff), 0,
         (struct sockaddr *)cli_conn->server_addr_info->ai_addr, &slen) < 0) {
 /*
     perror("recvfrom()");

@@ -331,7 +331,8 @@ size_t server_message_write(server_message_t * msg, char * buf)
 {
   size_t len;
 
-  memcpy(buf++, &msg->type, 1);
+  memcpy(buf, &msg->type, 1);
+  buf++;
   len = 1;
 
   switch(msg->type) {
