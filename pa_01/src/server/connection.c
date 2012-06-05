@@ -19,7 +19,7 @@
 
 struct server_connection {
   int sock;
-  unsigned int port;
+  in_port_t port;
   struct sockaddr_in * addr;
   list_t  * rooms;
   list_t  * clients;
@@ -45,7 +45,7 @@ static server_connection_t * _server_connection = NULL;
 
 ////////////////////////////////////////////////////////
 
-server_connection_t * server_connection_new(int port)
+server_connection_t * server_connection_new(in_port_t port)
 {
   int sockfd, err;
   struct sockaddr_in * addr = calloc(1, sizeof(struct sockaddr_in));

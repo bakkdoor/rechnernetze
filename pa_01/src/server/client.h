@@ -10,7 +10,7 @@ typedef struct client {
   chat_user_t * chat_user;
   struct sockaddr_in * addr;
   int sock;
-  uint32_t port;
+  in_port_t port;
 } client_t;
 
 client_t * client_new(chat_user_t * char_user, struct sockaddr_in * client_addr);
