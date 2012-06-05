@@ -61,36 +61,26 @@ void client_delete(void * _client) {
 
 int client_send_message(const client_t * client, server_message_t * message)
 {
-  int bytes_sent;
-  char * buf = calloc(MAX_SERVER_MSG_SIZE, sizeof(char));
+  char buf[MAX_SERVER_MSG_SIZE];
   size_t len = server_message_write(message, buf);
 
-  bytes_sent = sendto(client->sock, buf, len, 0,
-                      (struct sockaddr *) client->addr,
-                      sizeof(struct sockaddr_in));
-
-  free(buf); /* ?!?! TODO: Check if OK here. */
-  return bytes_sent;
+  return sendto(client->sock, buf, len, 0,
+                (struct sockaddr *) client->addr,
+                sizeof(struct sockaddr_in));
 }
 
 client_message_t * client_read_message(const client_t * client)
 {
-  char * buf;
-  int bytes_read;
-  client_message_t * incoming_message = NULL;
-
-  buf = calloc(MAX_CLIENT_MSG_SIZE, sizeof(char));
+  char buf[MAX_CLIENT_MSG_SIZE];
+  unsigned int bytes_read;
 
   bytes_read = recvfrom(client->sock, buf, sizeof(buf), 0,
                         (struct sockaddr *) client->addr,
                         (socklen_t *) sizeof(struct sockaddr_in));
 
   if(bytes_read < 1) {
-    free(buf);
     return NULL;
   }
 
-  incoming_message = client_message_read(buf);
-  free(buf);
-  return incoming_message;
+  return client_message_read(buf);
 }
