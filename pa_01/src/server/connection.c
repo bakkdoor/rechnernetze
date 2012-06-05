@@ -233,11 +233,16 @@ void server_connection_handle_message(server_connection_t * server_conn, client_
       list_insert(server_conn->rooms, room);
     } else {
       room = chat_room_new(msg->cl_room_msg.room_name);
+
+      if(!room) {
+        error(false, "Could not create new chatroom with name: %s", msg->cl_room_msg.room_name);
+        return;
+      }
+
       chat_room_add_user(room, client->chat_user);
       list_insert(server_conn->rooms, room);
       list_insert(client->chat_user->rooms, room);
     }
-
 
     reply->type = SV_ROOM_MSG;
     reply->sv_room_msg.room_length = strlen(room->name) + 1;
