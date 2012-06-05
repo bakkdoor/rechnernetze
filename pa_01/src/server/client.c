@@ -7,7 +7,7 @@
 #include "../common/chat_user.h"
 #include "../common/output.h"
 
-client_t * client_new(chat_user_t * chat_user, struct sockaddr_in * client_addr, int port) {
+client_t * client_new(chat_user_t * chat_user, struct sockaddr_in * client_addr) {
   client_t * client;
   int slen = sizeof(struct sockaddr_in);
 
@@ -22,7 +22,7 @@ client_t * client_new(chat_user_t * chat_user, struct sockaddr_in * client_addr,
   }
 
   client->addr->sin_family = AF_INET;
-  client->addr->sin_port = htons(port);
+  client->addr->sin_port = htons(0);
   client->addr->sin_addr.s_addr = client_addr->sin_addr.s_addr;
   client->sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if (client->sock < 0) {
@@ -30,11 +30,13 @@ client_t * client_new(chat_user_t * chat_user, struct sockaddr_in * client_addr,
   }
 
   if (bind(client->sock, (struct sockaddr *)client->addr, sizeof(struct sockaddr_in)) < 0) {
-    error(false, "Could not bind on user-specific port %d for user %s", port, chat_user->name);
+    error(false, "Could not bind on user-specific port for user %s", chat_user->name);
+    return NULL;
   } else {
-    info("User-specific port %d opened for user %s", port, chat_user->name);
+    client->port = ntohs(client->addr->sin_port);
+    info("User-specific port %d opened for user %s", client->port, chat_user->name);
   }
-  
+
   if (getsockname(client->sock, (struct sockaddr *)client->addr, &slen) < 0) {
     perror("getsockname()");
     error(false, "getsockname() failed");

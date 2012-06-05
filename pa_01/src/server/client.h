@@ -10,9 +10,10 @@ typedef struct client {
   chat_user_t * chat_user;
   struct sockaddr_in * addr;
   int sock;
+  unsigned int port;
 } client_t;
 
-client_t * client_new(chat_user_t * char_user, struct sockaddr_in * client_addr, int port);
+client_t * client_new(chat_user_t * char_user, struct sockaddr_in * client_addr);
 void client_delete(void * client);
 int client_send_message(client_t * client, server_message_t * message);
 client_message_t * client_read_message(const client_t * client);
