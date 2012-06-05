@@ -40,16 +40,12 @@ typedef struct msg_cl_msg {
   char * message;
 } msg_cl_msg_t;
 
-typedef struct cl_disc_req {
-} msg_cl_disc_req_t;
-
 typedef struct client_message {
   uint8_t type;
   union {
     msg_cl_con_req_t cl_con_req;
     msg_cl_room_msg_t cl_room_msg;
     msg_cl_msg_t cl_msg;
-    msg_cl_disc_req_t cl_disc_req;
   };
 } client_message_t;
 

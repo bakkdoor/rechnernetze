@@ -23,6 +23,10 @@
 #define LEAVE_PRE_CMD "/leave "
 #define DISCONNECT_CMD "/disconnect"
 
+client_message_t * parse_client_message(const char * buf);
+
+int closecountdown = 3;
+
 struct client_connection {
   int sock;
   struct addrinfo * server_addr_info;
@@ -133,8 +137,18 @@ client_connection_t * connection_setup(const char * server_hostname, const char 
   return NULL;  // error terminate
 }
 
-int connection_close(client_connection_t * cli_conn) {
-  return 0;
+void connection_close(client_connection_t * cli_conn) {
+  int count;
+  client_message_t * msg = parse_client_message(DISCONNECT_CMD);
+  int sent = 0;
+  
+  for (count = 3; count > 0; count --) {
+    sent = connection_send_client_message(cli_conn, msg);
+    connection_handle_socks(cli_conn, DEFAULT_TIMEOUT_SEC);
+  }
+  
+  connection_delete(cli_conn);
+  error(true, "Verbindung nicht erfolgreich beendet. Wartezeit verstrichen.");
 }
 
 void connection_delete(client_connection_t * cli_conn) {
@@ -193,6 +207,7 @@ void connection_handle_socks(client_connection_t * cli_conn, int timeout_sec) {
   client_message_t * cli_msg;
   char buff[MAX_CLIENT_MSG_SIZE];
   ssize_t len;
+  int size;
   
   memset(buff, 0, MAX_CLIENT_MSG_SIZE);
 
@@ -209,17 +224,28 @@ void connection_handle_socks(client_connection_t * cli_conn, int timeout_sec) {
     
     if (FD_ISSET(cli_conn->sock, &read_fds)) {
       srv_msg = connection_recv_client_message(cli_conn);
-      handle_client_message(srv_msg);
+      handle_server_message(srv_msg);
+      free(srv_msg);
     } 
     if (FD_ISSET(STDIN_FILENO, &read_fds)) {
       len = readline(STDIN_FILENO, buff, MAX_CLIENT_MSG_SIZE);
       cli_msg = parse_client_message(buff);
-      connection_send_client_message(cli_conn, cli_msg);
+      if (cli_msg != NULL) {
+        if (cli_msg->type == CL_DISC_REQ) {
+          connection_close(cli_conn);
+        } else {
+          size = connection_send_client_message(cli_conn, cli_msg);
+          free(cli_msg);
+#ifdef DEBUG
+          info ("send data: %d", size);
+#endif
+        }
+      }
     }
   }
 }
 
-void handle_client_message(server_message_t * msg) {
+void handle_server_message(server_message_t * msg) {
 
 }
 
@@ -230,31 +256,31 @@ client_message_t * parse_client_message(const char * buf)
   message = calloc(1, sizeof(client_message_t));
   if (!message) return NULL;
 
-  if (strncmp("/join ", buf, strlen("/join ")) == 0) {
+  if (strncmp(JOIN_PRE_CMD, buf, strlen(JOIN_PRE_CMD)) == 0) {
     message->type = CL_ROOM_MSG;
     message->cl_room_msg.action = CL_ROOM_MSG_ACTION_JOIN;
-    message->cl_room_msg.room_name = calloc(strlen(buf + strlen("/join ")) + 1, sizeof(char));
+    message->cl_room_msg.length = strlen(buf + strlen(JOIN_PRE_CMD)) + 1;
+    message->cl_room_msg.room_name = calloc(message->cl_room_msg.length, sizeof(char));
     if (!message->cl_room_msg.room_name) {
       //TODO
     }
     if (!strcpy(message->cl_room_msg.room_name, buf + strlen(JOIN_PRE_CMD))) {
       //TODO
     }
-    message->cl_room_msg.length = strlen(message->cl_room_msg.room_name) +1;
 
-  } else if (strncmp(LEAVE_PRE_CMD, buf, sizeof(LEAVE_PRE_CMD)) == 0) {
-    message->type = CL_ROOM_MSG_ACTION_LEAVE;
+  } else if (strncmp(LEAVE_PRE_CMD, buf, strlen(LEAVE_PRE_CMD)) == 0) {
+    message->type = CL_ROOM_MSG;
     message->cl_room_msg.action = CL_ROOM_MSG_ACTION_LEAVE;
-    message->cl_room_msg.room_name = calloc(strlen(buf + strlen(LEAVE_PRE_CMD)) + 1, sizeof(char));
+    message->cl_room_msg.length = strlen(buf + strlen(LEAVE_PRE_CMD)) + 1;
+    message->cl_room_msg.room_name = calloc(message->cl_room_msg.length, sizeof(char));
     if (!message->cl_room_msg.room_name) {
       //TODO
     }
     if (!strcpy(message->cl_room_msg.room_name, buf + strlen(LEAVE_PRE_CMD))) {
       //TODO
     }
-    message->cl_room_msg.length = strlen(message->cl_room_msg.room_name) +1;
 
-  } else if (strncmp(DISCONNECT_CMD, buf, sizeof(DISCONNECT_CMD)) == 0) {
+  } else if (strncmp(DISCONNECT_CMD, buf, strlen(DISCONNECT_CMD)) == 0) {
     message->type = CL_DISC_REQ;
 
   } else {
@@ -279,7 +305,7 @@ client_message_t * parse_client_message(const char * buf)
       strcpy(message->cl_msg.message, buf + message->cl_msg.room_length);
 
     } else {
-      // TODO
+      free(message);
       return NULL;
     }
   }
