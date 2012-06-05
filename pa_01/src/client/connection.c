@@ -9,7 +9,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
-#include <bits/socket.h>
 
 #include "connection.h"
 #include "../common/output.h"
