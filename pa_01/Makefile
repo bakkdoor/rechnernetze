@@ -9,7 +9,7 @@ SERVER_SRC			= src/server/server.o src/server/connection.o src/server/client.o
 COMMON					= src/common/unp_readline.o src/common/list.o src/common/chat_user.o src/common/chat_room.o src/common/messages.o src/common/output.o
 
 PORT	= 1234
-ADDR	= 127.0.0.1
+ADDR	= localhost
 NAME	= user
 
 default: $(CLIENT) $(SERVER)
