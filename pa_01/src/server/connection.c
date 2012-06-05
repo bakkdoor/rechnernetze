@@ -160,16 +160,23 @@ void server_connection_handle_new_clients(server_connection_t * server_conn)
     return;
   }
 
-  list_insert(server_conn->clients, client);
-
   info("New user connected with name: %s", chat_user->name);
 
   /* send reply to client with new port number */
 
   server_message_t reply;
   reply.type = SV_CON_REP;
-  reply.sv_con_rep.state = CON_REP_OK;
-  reply.sv_con_rep.comm_port = client->port;
+
+
+  if(server_connection_has_client(server_conn, client)) {
+    info("User tried to connect with already taken name: %s", chat_user->name);
+    reply.sv_con_rep.state = CON_REP_BAD_USERNAME;
+    reply.sv_con_rep.comm_port = 0;
+  } else {
+    reply.sv_con_rep.state = CON_REP_OK;
+    reply.sv_con_rep.comm_port = client->port;
+    list_insert(server_conn->clients, client);
+  }
 
   buf = calloc(1, MAX_SERVER_MSG_SIZE);
   if(!buf) {
@@ -192,6 +199,11 @@ void server_connection_handle_new_clients(server_connection_t * server_conn)
 
   client_message_delete(message);
   free(buf);
+
+  if(reply.sv_con_rep.state == CON_REP_BAD_USERNAME) {
+    close(client->sock);
+    client_delete(client);
+  }
 }
 
 static fd_set _read_fds;
@@ -378,4 +390,19 @@ void server_connection_room_broadcast(server_connection_t * server_conn, server_
       client_send_message(client, msg);
     }
   }
+}
+
+static char * _username;
+bool client_with_correct_name(const void * _client)
+{
+  const client_t * client = _client;
+  return strcmp(_username, client->chat_user->name) == 0;
+}
+
+bool server_connection_has_client(server_connection_t * server_conn, client_t * client)
+{
+  _username = client->chat_user->name;
+  if(list_find_first(server_conn->clients, client_with_correct_name))
+    return true;
+  return false;
 }

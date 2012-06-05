@@ -50,3 +50,18 @@ void chat_room_send_message(const chat_user_t * user, const char * message)
 {
   /* TODO */
 }
+
+static char * _username = "";
+bool user_with_correct_name(const void * _user)
+{
+  const chat_user_t * user = _user;
+  return strcmp(user->name, _username) == 0;
+}
+
+bool chat_room_has_user(const chat_room_t * room, const chat_user_t * user)
+{
+  _username = user->name;
+  if(list_find_first(room->users, user_with_correct_name))
+    return true;
+  return false;
+}
