@@ -91,8 +91,10 @@ client_message_t * client_message_read(char * buf)
   unsigned int length = 0;
   client_message_t * message = calloc(1, sizeof(client_message_t));
 
-  if(!message)
+  if(!message) {
     error(false, "Could not allocate memory for a client message!");
+    return NULL;
+  }
 
   message->type = read_byte(buf);
   buf++;
@@ -246,11 +248,13 @@ void _server_message_delete(void * server_message)
 server_message_t * server_message_read(char * buf)
 {
   char type;
+  unsigned int length = 0;
   server_message_t * message = calloc(1, sizeof(server_message_t));
-  unsigned int length;
 
-  if(!message)
+  if(!message) {
     error(false, "Could not allocate memory for a server message!");
+    return NULL;
+  }
 
   message->type = read_byte(buf);
   buf++;
