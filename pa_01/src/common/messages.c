@@ -8,7 +8,7 @@
 
 /* HELPER FUNCTIONS  */
 
-unsigned int read_int(char * buf, size_t n_bytes)
+uint32_t read_int(char * buf, size_t n_bytes)
 {
   unsigned int length;
   memcpy(&length, buf, n_bytes);
@@ -16,6 +16,13 @@ unsigned int read_int(char * buf, size_t n_bytes)
     return length;
   }
   return ntohl(length);
+}
+
+uint8_t read_byte(char * buf)
+{
+  uint8_t byte;
+  memcpy(&byte, buf, 1);
+  return byte;
 }
 
 char * read_string(char * buf, size_t length)
@@ -32,6 +39,11 @@ void write_int(void * buf, unsigned int i, size_t n_bytes)
     net_int = i;
   }
   memcpy(buf, &net_int, n_bytes);
+}
+
+void write_byte(void * buf, uint8_t i)
+{
+  memcpy(buf, &i, 1);
 }
 
 void write_string(void * buf, char * str, size_t length)
@@ -54,17 +66,13 @@ void _client_message_delete(void * client_message)
 client_message_t * client_message_read(char * buf)
 {
   char type;
-  char * tmp;
   unsigned int length = 0;
   client_message_t * message = calloc(1, sizeof(client_message_t));
 
   if(!message)
     error(false, "Could not allocate memory for a client message!");
 
-  tmp = (char *) memcpy(&type, buf, 1);
-  type = *tmp;
-
-  message->type = type;
+  message->type = read_byte(buf);
   buf++;
 
   /* TODO: */
@@ -86,7 +94,7 @@ client_message_t * client_message_read(char * buf)
     message->cl_room_msg.room_name = read_string(buf, length);
     buf += length;
 
-    message->cl_room_msg.action = read_int(buf, 1);
+    message->cl_room_msg.action = read_byte(buf);
     break;
 
   case CL_MSG:
@@ -144,7 +152,7 @@ size_t client_message_write(client_message_t * msg, char * buf)
     write_string(buf, msg->cl_room_msg.room_name, msg->cl_room_msg.length);
     buf += msg->cl_room_msg.length;
 
-    write_int(buf, msg->cl_room_msg.action, 1);
+    write_byte(buf, msg->cl_room_msg.action);
     buf++;
     break;
 
@@ -201,22 +209,19 @@ void _server_message_delete(void * server_message)
 server_message_t * server_message_read(char * buf)
 {
   char type;
-  char * tmp;
   server_message_t * message = calloc(1, sizeof(server_message_t));
   unsigned int length;
 
   if(!message)
     error(false, "Could not allocate memory for a server message!");
 
-  tmp = (char *) memcpy(&type, buf, 1);
-  type = *tmp;
-  message->type = type;
+  message->type = read_byte(buf);
   buf++;
 
   /* TODO: */
   switch(type) {
   case SV_CON_REP:
-    message->sv_con_rep.state = read_int(buf, 1);
+    message->sv_con_rep.state = read_byte(buf);
     buf++;
     message->sv_con_rep.comm_port = read_int(buf, 4);
     buf += 4;
@@ -293,7 +298,7 @@ size_t server_message_write(server_message_t * msg, char * buf)
   switch(msg->type) {
   case SV_CON_REP:
     len += 1 + 4;
-    write_int(buf, msg->sv_con_rep.state, 1);
+    write_byte(buf, msg->sv_con_rep.state);
     buf++;
     write_int(buf, msg->sv_con_rep.comm_port, 4);
     buf += 4;
@@ -314,7 +319,7 @@ size_t server_message_write(server_message_t * msg, char * buf)
     write_string(buf, msg->sv_room_msg.user, msg->sv_room_msg.user_length);
     buf += msg->sv_room_msg.user_length;
 
-    write_int(buf, msg->sv_room_msg.action, 1);
+    write_byte(buf, msg->sv_room_msg.action);
     buf++;
     break;
 
