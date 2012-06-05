@@ -27,19 +27,24 @@ client_t * client_new(chat_user_t * chat_user, struct sockaddr_in * client_addr)
   client->sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if (client->sock < 0) {
     error(false, "Could not setup user-specific socket for user %s", chat_user->name);
+    free(client);
+    return NULL;
   }
 
   if (bind(client->sock, (struct sockaddr *)client->addr, sizeof(struct sockaddr_in)) < 0) {
     error(false, "Could not bind on user-specific port for user %s", chat_user->name);
+    free(client);
     return NULL;
-  } else {
-    client->port = ntohs(client->addr->sin_port);
-    info("User-specific port %d opened for user %s", client->port, chat_user->name);
   }
 
   if (getsockname(client->sock, (struct sockaddr *)client->addr, &slen) < 0) {
     perror("getsockname()");
     error(false, "getsockname() failed");
+    free(client);
+    return NULL;
+  } else {
+    client->port = ntohs(client->addr->sin_port);
+    info("User-specific port %d opened for user %s", client->port, chat_user->name);
   }
 
   fcntl(client->sock, F_SETFL, O_NONBLOCK);
