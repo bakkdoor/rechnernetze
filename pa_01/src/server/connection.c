@@ -210,7 +210,7 @@ void server_connection_handle_message(server_connection_t * server_conn, client_
  */
 
   client_message_t * msg = cwm->msg;
-  client_t * client = cwm->client;
+  const client_t * client = cwm->client;
   chat_room_t * room;
   server_message_t * reply;
   list_node_t * current;
@@ -269,14 +269,14 @@ void server_connection_handle_message(server_connection_t * server_conn, client_
 
     reply = calloc(1, sizeof(server_message_t));
     reply->type = SV_DISC_AMSG;
-    current = client->chat_user->rooms;
+    current = client->chat_user->rooms->first;
     for(; current; current = current->next) {
       room = current->data;
       server_connection_room_broadcast(server_conn, reply, room->name);
       list_delete(room->users, (void*)client->chat_user); /* remove from room */
     }
 
-    client_delete(client);
+    client_delete((client_t*)client);
 
     /* remove user from rooms */
     break;

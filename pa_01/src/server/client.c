@@ -59,7 +59,7 @@ void client_delete(void * _client) {
   free(client);
 }
 
-int client_send_message(client_t * client, server_message_t * message)
+int client_send_message(const client_t * client, server_message_t * message)
 {
   int bytes_sent;
   char * buf = calloc(MAX_SERVER_MSG_SIZE, sizeof(char));
