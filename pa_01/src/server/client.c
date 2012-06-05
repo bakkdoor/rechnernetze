@@ -60,7 +60,6 @@ void client_delete(void * _client) {
 int client_send_message(client_t * client, server_message_t * message)
 {
   int bytes_sent;
-  int i;
   char * buf = calloc(MAX_SERVER_MSG_SIZE, sizeof(char));
   size_t len = server_message_write(message, buf);
 

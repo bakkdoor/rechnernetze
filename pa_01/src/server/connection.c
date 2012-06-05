@@ -279,7 +279,7 @@ void server_connection_handle_message(server_connection_t * server_conn, client_
     for(; current; current = current->next) {
       room = current->data;
       server_connection_room_broadcast(server_conn, reply, room->name);
-      list_delete(room->users, client->chat_user); /* remove from room */
+      list_delete(room->users, (void*)client->chat_user); /* remove from room */
     }
 
     client_delete(client);
