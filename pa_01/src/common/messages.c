@@ -54,9 +54,30 @@ void write_string(void * buf, char * str, size_t length)
 
 /* MAIN MESSAGE FUNCTIONS */
 
-void client_message_delete(client_message_t * client_message)
+void client_message_delete(client_message_t * msg)
 {
-  /* TODO */
+  switch(msg->type) {
+  case CL_CON_REQ:
+    free(msg->cl_con_req.name);
+    break;
+
+  case CL_ROOM_MSG:
+    free(msg->cl_room_msg.room_name);
+    break;
+
+  case CL_MSG:
+    free(msg->cl_msg.room_name);
+    free(msg->cl_msg.message);
+    break;
+
+  case CL_DISC_REQ:
+    break;
+
+  default:
+    break;
+  }
+
+  free(msg);
 }
 
 void _client_message_delete(void * client_message)
@@ -69,8 +90,10 @@ client_message_t * client_message_read(char * buf)
   unsigned int length = 0;
   client_message_t * message = calloc(1, sizeof(client_message_t));
 
-  if(!message)
+  if(!message) {
     error(false, "Could not allocate memory for a client message!");
+    return NULL;
+  }
 
   message->type = read_byte(buf);
   buf++;
@@ -185,20 +208,35 @@ size_t client_message_write(client_message_t * msg, char * buf)
   return len;
 }
 
-void server_message_delete(server_message_t * server_message) {
-  if (!server_message) return;
-  switch(server_message->type) {
+void server_message_delete(server_message_t * msg) {
+  if (!msg) return;
+  switch(msg->type) {
     case SV_CON_REP:
       break;
 
-    case SV_ROOM_MSG: break;
-    case SV_AMSG: break;
-    case SV_DISC_REP: break;
-    case SV_DISC_AMSG: break;
-    default: break;
+    case SV_ROOM_MSG:
+      free(msg->sv_room_msg.room);
+      free(msg->sv_room_msg.user);
+      break;
+
+    case SV_AMSG:
+      free(msg->sv_amsg.room);
+      free(msg->sv_amsg.user);
+      free(msg->sv_amsg.msg);
+      break;
+
+    case SV_DISC_REP:
+      break;
+
+    case SV_DISC_AMSG:
+      free(msg->sv_disc_amsg.user);
+      break;
+
+    default:
+      break;
   }
 
-  free(server_message);
+  free(msg);
 }
 
 void _server_message_delete(void * server_message)
@@ -209,11 +247,13 @@ void _server_message_delete(void * server_message)
 server_message_t * server_message_read(char * buf)
 {
   char type;
+  unsigned int length = 0;
   server_message_t * message = calloc(1, sizeof(server_message_t));
-  unsigned int length;
 
-  if(!message)
+  if(!message) {
     error(false, "Could not allocate memory for a server message!");
+    return NULL;
+  }
 
   message->type = read_byte(buf);
   buf++;

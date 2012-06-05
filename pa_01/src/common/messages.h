@@ -30,7 +30,6 @@ typedef struct msg_cl_con_req {
 typedef struct msg_cl_room_msg {
   uint32_t length;
   char * room_name;
-  /* byte action; */
   uint8_t action;
 } msg_cl_room_msg_t;
 
