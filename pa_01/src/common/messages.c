@@ -2,6 +2,7 @@
 #include <string.h>
 #include <assert.h>
 #include <stdio.h>
+#include <arpa/inet.h>
 
 #include "messages.h"
 #include "output.h"
