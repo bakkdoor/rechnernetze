@@ -112,6 +112,11 @@ unsigned int list_insert_after(list_t * list, void * data, bool (* predicate)(vo
   return pos;
 }
 
+int list_compare_default(void * a, void * b)
+{
+  return a == b ? 0 : 1;
+}
+
 void list_remove(list_t * list, void * data, bool delete_all, int (* list_compare)(void * a, void * b), void (* delete_func)(void * data))  // defaults to comparing pointers
 {
   if(list == NULL)
@@ -119,6 +124,10 @@ void list_remove(list_t * list, void * data, bool delete_all, int (* list_compar
 
   list_node_t * current = list->first;
   list_node_t * tmp;
+
+  if(!list_compare)
+    list_compare = list_compare_default;
+
   while(current) {
     if(list_compare(current->data, data) == 0) {
       tmp = current;

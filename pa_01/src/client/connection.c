@@ -18,7 +18,7 @@
 
 enum {
   DEFAULT_TIMEOUT_SEC = 5,
-  
+
 };
 
 #define JOIN_PRE_CMD "/join "
@@ -28,7 +28,7 @@ enum {
 struct client_connection {
   int sock;
   struct addrinfo * server_addr_info;
-  const char * username;
+  char * username;
 };
 
 client_connection_t * connection_setup(const char * server_hostname, const char * server_port, char * username) {
@@ -65,7 +65,7 @@ client_connection_t * connection_setup(const char * server_hostname, const char 
   strcpy(cli_conn->server_addr_info->ai_canonname, server_hostname);
 
 #ifdef DEBUG
-  addr = cli_conn->server_addr_info->ai_addr;
+  addr = (struct sockaddr_in *) cli_conn->server_addr_info->ai_addr;
 
   printf("hostname: %s, ip: %s, port: %u\n",
           cli_conn->server_addr_info->ai_canonname,
@@ -111,13 +111,13 @@ int connection_has_incoming_data(int sockfd, int timeout_sec) {
   return 0;
 }
 
-client_message_t * parse_client_message(const char * buf) 
+client_message_t * parse_client_message(const char * buf)
 {
   client_message_t * message;
-  
+
   message = calloc(1, sizeof(client_message_t));
   if (!message) return NULL;
-    
+
   if (strncmp(JOIN_PRE_CMD, buf, sizeof(JOIN_PRE_CMD)) == 0) {
     message->type = CL_ROOM_MSG;
     message->cl_room_msg.action = CL_ROOM_MSG_ACTION_JOIN;
@@ -129,7 +129,7 @@ client_message_t * parse_client_message(const char * buf)
       //TODO
     }
     message->cl_room_msg.length = strlen(message->cl_room_msg.room_name) +1;
-    
+
   } else if (strncmp(LEAVE_PRE_CMD, buf, sizeof(LEAVE_PRE_CMD)) == 0) {
     message->type = CL_ROOM_MSG_ACTION_LEAVE;
     message->cl_room_msg.action = CL_ROOM_MSG_ACTION_LEAVE;
@@ -141,35 +141,36 @@ client_message_t * parse_client_message(const char * buf)
       //TODO
     }
     message->cl_room_msg.length = strlen(message->cl_room_msg.room_name) +1;
-    
+
   } else if (strncmp(DISCONNECT_CMD, buf, sizeof(DISCONNECT_CMD)) == 0) {
     message->type = CL_DISC_REQ;
-    
+
   } else {
     message->type = CL_MSG;
-    
-    if (strchr(buf, " ") > buf // contains a blank char
-            && strchr(buf, " ") < buf + strlen(buf)) { // has chars after blank
-      message->cl_msg.room_length = strchr(buf, " ") - buf + 1;
+
+    if (strchr(buf, ' ') > buf // contains a blank char
+            && strchr(buf, ' ') < buf + strlen(buf)) { // has chars after blank
+      message->cl_msg.room_length = strchr(buf, ' ') - buf + 1;
       message->cl_msg.room_name = calloc(message->cl_msg.room_length, sizeof(char));
       if (!message->cl_msg.room_name) {
         //TODO
       }
-      
+
       strncpy(message->cl_msg.room_name, buf, message->cl_msg.room_length -1);
-      
+
       message->cl_msg.msg_length = strlen(buf + message->cl_msg.room_length) +1;
       message->cl_msg.message = calloc(message->cl_msg.msg_length, sizeof(char));
       if (!message->cl_msg.message) {
         //TODO
       }
-      
+
       strcpy(message->cl_msg.message, buf + message->cl_msg.room_length);
-      
+
     } else {
       // TODO
       return NULL;
     }
   }
-  
+
+  return message;
 }
