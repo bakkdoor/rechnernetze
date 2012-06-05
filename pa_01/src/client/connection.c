@@ -13,18 +13,19 @@
 
 #include "connection.h"
 #include "../common/output.h"
-#include "../common/dnsutils.h"
-#include "../common/network_conversations.h"
 #include "../common/messages.h"
+#include "../common/chat_user.h"
+
+#define DEBUG
 
 enum {
   DEFAULT_TIMEOUT_SEC = 5
 };
 
 struct client_connection {
-  char * username;
   int sock;
   struct addrinfo * server_addr_info;
+  chat_user_t * user;
 };
 
 client_connection_t * connection_setup(const char * server_hostname, const char * server_port, char * username) {
@@ -37,6 +38,7 @@ client_connection_t * connection_setup(const char * server_hostname, const char 
     //TODO
   }
   
+  // resolve hostname to ip
   hints = calloc(1, sizeof(struct addrinfo));
   if (!hints) {
     //TODO
@@ -48,7 +50,8 @@ client_connection_t * connection_setup(const char * server_hostname, const char 
   hints->ai_flags = 0;
   
   if (getaddrinfo(server_hostname, server_port, hints, &cli_conn->server_addr_info) != 0) {
-    error(true, "Could not resolve hostname '%s'\n", server_hostname);
+    error(false, "Could not resolve hostname '%s'\n", server_hostname);
+    //TODO free mem
   }
   
   cli_conn->server_addr_info->ai_canonname = calloc(strlen(server_hostname) +1, sizeof(char));
@@ -66,6 +69,14 @@ client_connection_t * connection_setup(const char * server_hostname, const char 
     inet_ntoa(addr->sin_addr),
     ntohs(addr->sin_port));
 #endif
+  // end resolve hostname to ip
+  
+  // init user
+  cli_conn->user = chat_user_new(username);
+  if (!cli_conn->user) {
+    //TODO
+  }
+  
   
   // TODO create sock
   // TODO send server request

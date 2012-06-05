@@ -34,7 +34,7 @@ client_t * client_new(chat_user_t * chat_user, struct sockaddr_in * client_addr,
   } else {
     info("User-specific port %d opened for user %s", port, chat_user->name);
   }
-
+  
   if (getsockname(client->sock, (struct sockaddr *)client->addr, &slen) < 0) {
     perror("getsockname()");
     error(false, "getsockname() failed");
