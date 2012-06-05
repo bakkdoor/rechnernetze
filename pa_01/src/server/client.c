@@ -9,7 +9,7 @@
 
 client_t * client_new(chat_user_t * chat_user, struct sockaddr_in * client_addr) {
   client_t * client;
-  int slen = sizeof(struct sockaddr_in);
+  unsigned int slen = sizeof(struct sockaddr_in);
 
   client = calloc(1, sizeof(client_t));
   if (!client) {
