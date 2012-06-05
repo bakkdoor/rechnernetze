@@ -262,6 +262,7 @@ void server_connection_handle_message(server_connection_t * server_conn, client_
     strcpy(reply->sv_room_msg.user, client->chat_user->name);
 
     server_connection_room_broadcast(server_conn, reply, room->name);
+    info("handle room message from %s", client->chat_user->name);
     break;
 
   case CL_MSG:

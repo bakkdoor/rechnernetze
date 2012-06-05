@@ -13,13 +13,11 @@
 #include "connection.h"
 #include "../common/output.h"
 #include "../common/chat_user.h"
+#include "common/unp_readline.h"
 
 #define DEBUG
 
-enum {
-  DEFAULT_TIMEOUT_SEC = 5,
-
-};
+#define DEFAULT_TIMEOUT_SEC 5
 
 #define JOIN_PRE_CMD "/join "
 #define LEAVE_PRE_CMD "/leave "
@@ -188,6 +186,43 @@ int connection_has_incoming_data(client_connection_t * cli_conn, int timeout_sec
   return select(cli_conn->sock + 1, &read_fds, NULL, NULL, &timeout);
 }
 
+void connection_handle_socks(client_connection_t * cli_conn, int timeout_sec) {
+  fd_set read_fds;
+  struct timeval timeout;
+  server_message_t * srv_msg;
+  client_message_t * cli_msg;
+  char buff[MAX_CLIENT_MSG_SIZE];
+  ssize_t len;
+  
+  memset(buff, 0, MAX_CLIENT_MSG_SIZE);
+
+  if (!cli_conn->sock) return;
+
+  timeout.tv_sec = timeout_sec;
+  timeout.tv_usec = 0;
+
+  FD_ZERO(&read_fds);
+  FD_SET(cli_conn->sock, &read_fds);
+  FD_SET(STDIN_FILENO, &read_fds);
+
+  if (select(cli_conn->sock + 1, &read_fds, NULL, NULL, &timeout) > 0) {
+    
+    if (FD_ISSET(cli_conn->sock, &read_fds)) {
+      srv_msg = connection_recv_client_message(cli_conn);
+      handle_client_message(srv_msg);
+    } 
+    if (FD_ISSET(STDIN_FILENO, &read_fds)) {
+      len = readline(STDIN_FILENO, buff, MAX_CLIENT_MSG_SIZE);
+      cli_msg = parse_client_message(buff);
+      connection_send_client_message(cli_conn, cli_msg);
+    }
+  }
+}
+
+void handle_client_message(server_message_t * msg) {
+
+}
+
 client_message_t * parse_client_message(const char * buf)
 {
   client_message_t * message;
@@ -195,10 +230,10 @@ client_message_t * parse_client_message(const char * buf)
   message = calloc(1, sizeof(client_message_t));
   if (!message) return NULL;
 
-  if (strncmp(JOIN_PRE_CMD, buf, sizeof(JOIN_PRE_CMD)) == 0) {
+  if (strncmp("/join ", buf, strlen("/join ")) == 0) {
     message->type = CL_ROOM_MSG;
     message->cl_room_msg.action = CL_ROOM_MSG_ACTION_JOIN;
-    message->cl_room_msg.room_name = calloc(strlen(buf + strlen(JOIN_PRE_CMD)) + 1, sizeof(char));
+    message->cl_room_msg.room_name = calloc(strlen(buf + strlen("/join ")) + 1, sizeof(char));
     if (!message->cl_room_msg.room_name) {
       //TODO
     }

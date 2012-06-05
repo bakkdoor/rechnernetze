@@ -35,52 +35,15 @@ int main(int argc, char ** argv)
   if (!cli_conn) {
     return 1;
   }
-/*
-
-  for (;fscanf(stdin, CHAT_CMD_JOIN, input);) {
-    sprintf(format, CHAT_CMD_JOIN, "roomname");
-    printf("[HELP]: Join a channel with %s!\n", format);
-  }
-
-  msg = calloc(1, sizeof(client_message_t));
+  
+  msg = parse_client_message("/join test");
   if (!msg) {
     //TODO
   }
-
-  msg->type = CL_ROOM_MSG;
-  msg->cl_room_msg.action = CL_ROOM_MSG_ACTION_JOIN;
-  msg->cl_room_msg.room_name = input;
-  msg->cl_room_msg.length = strlen(input);
-
-  if (connection_send_client_message(cli_conn, msg) < 1) {
-    //TODO can't send msg
+  
+  connection_send_client_message(cli_conn, msg);
+  
+  while (true) {
+    connection_handle_socks(cli_conn, 5);
   }
-
-  strcpy(input, "");
-  // TODO handle masseges
-  while (1) {
-    readline(stdin, input, sizeof(input));
-    if (strcmp(CHAT_CMD_DISCONNECT, input) == 0) {
-      goto quit;
-    } else if (input_is_join(input)) {
-      // TODO
-    } else if (input_is_leave(input)) {
-
-    } else {
-      // std message
-    }
-  }
-*/
-
-quit:
-  connection_close(cli_conn);
-  return 0;
-}
-
-int input_is_join(const char * input) {
-  return scanf(CHAT_CMD_JOIN, input);
-}
-
-int input_is_leave(const char * input) {
-  return scanf(CHAT_CMD_LEAVE, input);
 }
