@@ -253,7 +253,7 @@ server_message_t * connection_recv_client_message(client_connection_t * cli_conn
   return incoming_message;
 }
 
-int connection_has_incoming_data(int sockfd, int timeout_sec) {
+int connection_has_incoming_data(int timeout_sec, int sockfd) {
   fd_set read_fds;
   struct timeval timeout;
 

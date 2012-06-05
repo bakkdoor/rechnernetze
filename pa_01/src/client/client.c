@@ -35,6 +35,7 @@ int main(int argc, char ** argv)
   if (!cli_conn) {
     return 1;
   }
+/*
 
   for (;fscanf(stdin, CHAT_CMD_JOIN, input);) {
     sprintf(format, CHAT_CMD_JOIN, "roomname");
@@ -69,6 +70,7 @@ int main(int argc, char ** argv)
       // std message
     }
   }
+*/
 
 quit:
   connection_close(cli_conn);

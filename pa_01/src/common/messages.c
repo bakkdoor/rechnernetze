@@ -66,7 +66,6 @@ void _client_message_delete(void * client_message)
 
 client_message_t * client_message_read(char * buf)
 {
-  char type;
   unsigned int length = 0;
   client_message_t * message = calloc(1, sizeof(client_message_t));
 
@@ -77,7 +76,7 @@ client_message_t * client_message_read(char * buf)
   buf++;
 
   /* TODO: */
-  switch(type) {
+  switch(message->type) {
   case CL_CON_REQ:
     length = read_int(buf, 4);
     buf += 4;
@@ -118,7 +117,7 @@ client_message_t * client_message_read(char * buf)
     break;
 
   default:
-    error(false, "Unknown incoming message type: %d", type);
+    error(false, "Unknown incoming message type: %u", message->type);
     assert(0);
     break;
   }
