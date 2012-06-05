@@ -87,7 +87,7 @@ int connection_close(client_connection_t * cli_conn)
   return 0;
 }
 
-void connection_delete(client_connection * cli_conn) 
+void connection_delete(client_connection_t * cli_conn) 
 {
   chat_user_delete(cli_conn->user);
   freeaddrinfo(cli_conn->server_addr_info);
