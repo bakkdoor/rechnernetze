@@ -89,7 +89,7 @@ client_connection_t * connection_setup(const char * server_hostname, const char 
   if (!message) {
     //TODO
   }
-  
+
   message->type = CL_CON_REQ;
   message->cl_con_req.name = calloc(strlen(username) + 1, sizeof(char));
   if (!message->cl_con_req.name) {
@@ -97,32 +97,31 @@ client_connection_t * connection_setup(const char * server_hostname, const char 
   }
   message->cl_con_req.length = strlen(username) + 1;
   strcpy(message->cl_con_req.name, username);
-  
-  SOCK_DGRAM;
-  cli_conn->sock = socket(cli_conn->server_addr_info->ai_family, 
-                          cli_conn->server_addr_info->ai_socktype, 
+
+  cli_conn->sock = socket(cli_conn->server_addr_info->ai_family,
+                          cli_conn->server_addr_info->ai_socktype,
                           cli_conn->server_addr_info->ai_protocol);
   if (cli_conn->sock < 0) {
     error(true, "Could not create socket!");
   }
-  
+
   for (count = 0; count < 3; count++) {
-    if (connection_send_client_message(cli_conn, message) > 0 
+    if (connection_send_client_message(cli_conn, message) > 0
             && connection_has_incoming_data(cli_conn, DEFAULT_TIMEOUT_SEC)) {
-      
+
       response = connection_recv_client_message(cli_conn);
       if (!response) {
         break;
       }
-      
+
       if (response->type == SV_CON_REP) {
         if (response->sv_con_rep.state == CON_REP_OK) {
           addr = (struct sockaddr_in *) cli_conn->server_addr_info->ai_addr;
           addr->sin_port = response->sv_con_rep.comm_port;
           cli_conn->server_addr_info->ai_addr = addr;
-          
+
           info("Verbindung akzeptiert. Der Port für die weitere Kommunikation lautet %u.", ntohs(addr->sin_port));
-          
+
           return cli_conn;
         } else {
           error(true, "Verbindung fehlgeschlagen. Benutzername %s bereits vergeben.", username);
@@ -130,7 +129,7 @@ client_connection_t * connection_setup(const char * server_hostname, const char 
       }
     }
   }
-  
+
   error(true, "Verbindung fehlgeschlagen. Wartezeit verstrichen.");
   return NULL;  // error terminate
 }
@@ -149,17 +148,18 @@ void connection_delete(client_connection_t * cli_conn) {
 int connection_send_client_message(client_connection_t * cli_conn, client_message_t * msg) {
   char buff[MAX_CLIENT_MSG_SIZE];
   size_t length  = client_message_write(msg, buff);
-  
-  return sendto(cli_conn->sock, buff, length, 0, 
-        (struct sockaddr *) cli_conn->server_addr_info->ai_addr, 
+
+  return sendto(cli_conn->sock, buff, length, 0,
+        (struct sockaddr *) cli_conn->server_addr_info->ai_addr,
         sizeof(struct sockaddr));
 }
 
 server_message_t * connection_recv_client_message(client_connection_t * cli_conn) {
   char buff[MAX_SERVER_MSG_SIZE];
-  
-  if (recvfrom(cli_conn->sock, buff, sizeof(buff), 0,  
-        (struct sockaddr *)cli_conn->server_addr_info->ai_addr, sizeof(struct sockaddr)) > 0) {
+  unsigned int slen = sizeof(struct sockaddr);
+
+  if (recvfrom(cli_conn->sock, buff, sizeof(buff), 0,
+               (struct sockaddr *)cli_conn->server_addr_info->ai_addr, &slen) > 0) {
     return server_message_read(buff);
   }
   return NULL;
