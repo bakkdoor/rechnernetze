@@ -63,6 +63,8 @@ server_connection_t * server_connection_new(in_port_t port)
     error(true, "Could not setup server socket");
   }
 
+  server_conn->clients_nfds = sockfd;
+
   server_conn->sock = sockfd;
   server_conn->port = port;
 
@@ -148,6 +150,9 @@ void server_connection_handle_new_clients(server_connection_t * server_conn)
 
   chat_user = chat_user_new(message->cl_con_req.name);
   client = client_new(chat_user, client_addr);
+
+  if(client->sock > server_conn->clients_nfds)
+    server_conn->clients_nfds = client->sock;
 
   if(!client) {
     free(client_addr);
@@ -346,7 +351,7 @@ void server_connection_handle_client_messages(server_connection_t * server_conn)
   FD_ZERO(&_read_fds);
   list_foreach(server_conn->clients, client_fd_set);
 
-  ready_socks = select(server_conn->clients_nfds, &_read_fds, NULL, NULL, &timeout);
+  ready_socks = select(server_conn->clients_nfds + 1, &_read_fds, NULL, NULL, &timeout);
 
   if(ready_socks > 0) {
     info("got sockets: %d", ready_socks);
