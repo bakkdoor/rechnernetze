@@ -14,6 +14,7 @@ int connection_send_client_message(client_connection_t * cli_conn, client_messag
 server_message_t * connection_recv_client_message(client_connection_t * cli_conn);
 int connection_has_incoming_data(client_connection_t * cli_conn, int timeout_sec);
 
+client_message_t * parse_client_message(const char * buf);
 void connection_handle_socks(client_connection_t * cli_conn, int timeout_sec);
 void handle_server_message(server_message_t * msg);
 

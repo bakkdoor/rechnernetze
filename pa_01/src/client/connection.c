@@ -13,7 +13,7 @@
 #include "connection.h"
 #include "../common/output.h"
 #include "../common/chat_user.h"
-#include "common/unp_readline.h"
+#include "../common/unp_readline.h"
 
 #define DEBUG
 
@@ -24,8 +24,6 @@
 #define DISCONNECT_CMD "/disconnect"
 
 client_message_t * parse_client_message(const char * buf);
-
-int closecountdown = 3;
 
 struct client_connection {
   int sock;
@@ -140,10 +138,9 @@ client_connection_t * connection_setup(const char * server_hostname, const char 
 void connection_close(client_connection_t * cli_conn) {
   int count;
   client_message_t * msg = parse_client_message(DISCONNECT_CMD);
-  int sent = 0;
   
   for (count = 3; count > 0; count --) {
-    sent = connection_send_client_message(cli_conn, msg);
+    connection_send_client_message(cli_conn, msg);
     connection_handle_socks(cli_conn, DEFAULT_TIMEOUT_SEC);
   }
   
@@ -154,7 +151,6 @@ void connection_close(client_connection_t * cli_conn) {
 void connection_delete(client_connection_t * cli_conn) {
   free(cli_conn->username);
   freeaddrinfo(cli_conn->server_addr_info);
-
   free(cli_conn);
 }
 
@@ -206,7 +202,6 @@ void connection_handle_socks(client_connection_t * cli_conn, int timeout_sec) {
   server_message_t * srv_msg;
   client_message_t * cli_msg;
   char buff[MAX_CLIENT_MSG_SIZE];
-  ssize_t len;
   int size;
   
   memset(buff, 0, MAX_CLIENT_MSG_SIZE);
@@ -228,7 +223,7 @@ void connection_handle_socks(client_connection_t * cli_conn, int timeout_sec) {
       free(srv_msg);
     } 
     if (FD_ISSET(STDIN_FILENO, &read_fds)) {
-      len = readline(STDIN_FILENO, buff, MAX_CLIENT_MSG_SIZE);
+      readline(STDIN_FILENO, buff, MAX_CLIENT_MSG_SIZE);
       cli_msg = parse_client_message(buff);
       if (cli_msg != NULL) {
         if (cli_msg->type == CL_DISC_REQ) {
