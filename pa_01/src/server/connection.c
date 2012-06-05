@@ -24,7 +24,6 @@ struct server_connection {
   list_t  * rooms;
   list_t  * clients;
   int clients_nfds;
-  unsigned int last_port;
 };
 
 typedef struct client_with_message {
@@ -66,8 +65,6 @@ server_connection_t * server_connection_new(int port)
 
   server_conn->sock = sockfd;
   server_conn->port = port;
-  server_conn->last_port = port;
-
 
   addr->sin_family = AF_INET;
   addr->sin_port = htons(port);
@@ -120,7 +117,6 @@ void server_connection_handle_new_clients(server_connection_t * server_conn)
   client_message_t * message = NULL;
   client_t * client;
   chat_user_t * chat_user;
-  int client_comm_port;
   int slen = sizeof(struct sockaddr_in);
   int tmp_sock;
   struct sockaddr_in * client_addr = calloc(1, sizeof(struct sockaddr_in));
@@ -150,10 +146,8 @@ void server_connection_handle_new_clients(server_connection_t * server_conn)
      create new user & client and add them to server_conn's clients list
   */
 
-  client_comm_port = ++server_conn->last_port;
-
   chat_user = chat_user_new(message->cl_con_req.name);
-  client = client_new(chat_user, client_addr, client_comm_port);
+  client = client_new(chat_user, client_addr);
   list_insert(server_conn->clients, client);
 
   info("New user connected with name: %s", chat_user->name);
@@ -163,7 +157,7 @@ void server_connection_handle_new_clients(server_connection_t * server_conn)
   server_message_t reply;
   reply.type = SV_CON_REP;
   reply.sv_con_rep.state = CON_REP_OK;
-  reply.sv_con_rep.comm_port = client_comm_port;
+  reply.sv_con_rep.comm_port = client->port;
 
   buf = calloc(1, MAX_SERVER_MSG_SIZE);
   if(!buf) {
@@ -216,7 +210,7 @@ void server_connection_handle_message(server_connection_t * server_conn, client_
  */
 
   client_message_t * msg = cwm->msg;
-  client_t * client = cwm->client;
+  const client_t * client = cwm->client;
   chat_room_t * room;
   server_message_t * reply;
   list_node_t * current;
@@ -239,11 +233,16 @@ void server_connection_handle_message(server_connection_t * server_conn, client_
       list_insert(server_conn->rooms, room);
     } else {
       room = chat_room_new(msg->cl_room_msg.room_name);
+
+      if(!room) {
+        error(false, "Could not create new chatroom with name: %s", msg->cl_room_msg.room_name);
+        return;
+      }
+
       chat_room_add_user(room, client->chat_user);
       list_insert(server_conn->rooms, room);
       list_insert(client->chat_user->rooms, room);
     }
-
 
     reply->type = SV_ROOM_MSG;
     reply->sv_room_msg.room_length = strlen(room->name) + 1;
@@ -275,14 +274,14 @@ void server_connection_handle_message(server_connection_t * server_conn, client_
 
     reply = calloc(1, sizeof(server_message_t));
     reply->type = SV_DISC_AMSG;
-    current = client->chat_user->rooms;
+    current = client->chat_user->rooms->first;
     for(; current; current = current->next) {
       room = current->data;
       server_connection_room_broadcast(server_conn, reply, room->name);
-      list_delete(room->users, client->chat_user); /* remove from room */
+      list_delete(room->users, (void*)client->chat_user); /* remove from room */
     }
 
-    client_delete(client);
+    client_delete((client_t*)client);
 
     /* remove user from rooms */
     break;
