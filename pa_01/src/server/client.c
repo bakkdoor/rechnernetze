@@ -73,10 +73,11 @@ client_message_t * client_read_message(const client_t * client)
 {
   char buf[MAX_CLIENT_MSG_SIZE];
   unsigned int bytes_read;
+  unsigned int slen = sizeof(struct sockaddr_in);
 
   bytes_read = recvfrom(client->sock, buf, sizeof(buf), 0,
                         (struct sockaddr *) client->addr,
-                        (socklen_t *) sizeof(struct sockaddr_in));
+                        (socklen_t *) &slen);
 
   if(bytes_read < 1) {
     return NULL;

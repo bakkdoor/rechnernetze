@@ -148,6 +148,13 @@ void server_connection_handle_new_clients(server_connection_t * server_conn)
 
   chat_user = chat_user_new(message->cl_con_req.name);
   client = client_new(chat_user, client_addr);
+
+  if(!client) {
+    free(client_addr);
+    free(buf);
+    return;
+  }
+
   list_insert(server_conn->clients, client);
 
   info("New user connected with name: %s", chat_user->name);
