@@ -10,6 +10,7 @@
 client_t * client_new(chat_user_t * chat_user, struct sockaddr_in * client_addr) {
   client_t * client;
   unsigned int slen = sizeof(struct sockaddr_in);
+  struct sockaddr_in addr;
 
   client = calloc(1, sizeof(client_t));
   if (!client) {
@@ -21,9 +22,9 @@ client_t * client_new(chat_user_t * chat_user, struct sockaddr_in * client_addr)
     error(false, "Could not create addr for new client");
   }
 
-  client->addr->sin_family = AF_INET;
-  client->addr->sin_port = htons(0);
-  client->addr->sin_addr.s_addr = client_addr->sin_addr.s_addr;
+  addr.sin_family = AF_INET;
+  addr.sin_port = htons(0);
+  addr.sin_addr.s_addr = htonl(INADDR_ANY); /* client_addr->sin_addr.s_addr; */
   client->sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if (client->sock < 0) {
     error(false, "Could not setup user-specific socket for user %s", chat_user->name);
@@ -31,19 +32,19 @@ client_t * client_new(chat_user_t * chat_user, struct sockaddr_in * client_addr)
     return NULL;
   }
 
-  if (bind(client->sock, (struct sockaddr *)client->addr, sizeof(struct sockaddr_in)) < 0) {
+  if (bind(client->sock, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) < 0) {
     error(false, "Could not bind on user-specific port for user %s", chat_user->name);
     free(client);
     return NULL;
   }
 
-  if (getsockname(client->sock, (struct sockaddr *)client->addr, &slen) < 0) {
+  if (getsockname(client->sock, (struct sockaddr *)&addr, &slen) < 0) {
     perror("getsockname()");
     error(false, "getsockname() failed");
     free(client);
     return NULL;
   } else {
-    client->port = ntohs(client->addr->sin_port);
+    client->port = ntohs(addr.sin_port);
     info("User-specific port %d opened for user %s", client->port, chat_user->name);
   }
 
