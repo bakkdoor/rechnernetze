@@ -9,11 +9,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
-#include <bits/socket.h>
 
 #include "connection.h"
 #include "../common/output.h"
-#include "../common/messages.h"
 #include "../common/chat_user.h"
 
 #define DEBUG
@@ -87,6 +85,14 @@ client_connection_t * connection_setup(const char * server_hostname, const char 
 int connection_close(client_connection_t * cli_conn)
 {
   return 0;
+}
+
+void connection_delete(client_connection * cli_conn) 
+{
+  chat_user_delete(cli_conn->user);
+  freeaddrinfo(cli_conn->server_addr_info);
+  
+  free(cli_conn);
 }
 
 int connection_send_client_message(client_connection_t * cli_conn, client_message_t * msg)
