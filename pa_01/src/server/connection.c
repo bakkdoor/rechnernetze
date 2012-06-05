@@ -336,6 +336,8 @@ void server_connection_handle_client_messages(server_connection_t * server_conn)
 {
   int ready_socks;
   struct timeval timeout;
+  list_t * clients_with_data;
+  list_t * incoming_messages;
 
   timeout.tv_sec = 0;
   timeout.tv_usec = DEFAULT_TIMEOUT_USEC;
@@ -347,8 +349,8 @@ void server_connection_handle_client_messages(server_connection_t * server_conn)
 
   if(ready_socks > 0) {
     info("got sockets: %d", ready_socks);
-    list_t * clients_with_data = list_filter(server_conn->clients, client_in_fdset);
-    list_t * incoming_messages = list_map(clients_with_data, _client_read_message);
+    clients_with_data = list_filter(server_conn->clients, client_in_fdset);
+    incoming_messages = list_map(clients_with_data, _client_read_message);
     list_foreach(incoming_messages, _server_connection_handle_message);
     list_delete(clients_with_data, NULL);
     list_delete(incoming_messages, _client_with_message_delete);
