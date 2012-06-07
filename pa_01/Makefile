@@ -40,8 +40,8 @@ run_server: $(SERVER)
 	./$(SERVER) $(PORT)
 
 vallgrind_client: $(CLIENT)
-	valgrind --tool=memcheck --leak-check=yes ./$(CLIENT)
+	valgrind --tool=memcheck --leak-check=yes ./$(CLIENT) $(ADDR) $(PORT) $(NAME)
 
 vallgrind_server: $(SERVER)
-	valgrind --tool=memcheck --leak-check=yes ./$(SERVER)
+	valgrind --tool=memcheck --leak-check=yes ./$(SERVER) $(PORT)
 

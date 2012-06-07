@@ -34,7 +34,7 @@ struct client_connection {
 client_connection_t * connection_setup(const char * server_hostname, const char * server_port, const char * username) {
   int count;
   client_connection_t * cli_conn;
-  struct addrinfo * hints;
+  struct addrinfo hints;
   client_message_t * message;
   server_message_t * response;
   struct sockaddr_in * addr;
@@ -46,24 +46,18 @@ client_connection_t * connection_setup(const char * server_hostname, const char 
   }
 
   // resolve hostname to ip
-  hints = calloc(1, sizeof (struct addrinfo));
-  if (!hints) {
-    //TODO
-  }
+  hints.ai_family = AF_INET;
+  hints.ai_socktype = SOCK_DGRAM;
+  hints.ai_protocol = 0; /* any */
+  hints.ai_flags = 0;
 
-  hints->ai_family = AF_INET;
-  hints->ai_socktype = SOCK_DGRAM;
-  hints->ai_protocol = 0; /* any */
-  hints->ai_flags = 0;
-
-  if (getaddrinfo(server_hostname, server_port, hints, &cli_conn->server_addr_info) != 0) {
-    error(false, "Could not resolve hostname '%s'\n", server_hostname);
-    //TODO free mem
+  if (getaddrinfo(server_hostname, server_port, &hints, &cli_conn->server_addr_info) != 0) {
+    error(true, "Could not resolve hostname '%s'\n", server_hostname);
   }
 
   cli_conn->server_addr_info->ai_canonname = calloc(strlen(server_hostname) + 1, sizeof (char));
   if (!cli_conn->server_addr_info->ai_canonname) {
-    //TODO
+    error(true, "Could not setup connection! Not enough memory?");
   }
 
   strcpy(cli_conn->server_addr_info->ai_canonname, server_hostname);
@@ -81,19 +75,19 @@ client_connection_t * connection_setup(const char * server_hostname, const char 
   // init user
   cli_conn->username = calloc(strlen(username) +1, sizeof(char));
   if (!cli_conn->username) {
-    //TODO
+    error(true, "Could not setup username! Not enough memory?");
   }
   strcpy(cli_conn->username, username);
 
   message = calloc(1, sizeof(client_message_t));
   if (!message) {
-    //TODO
+    error(true, "Could not create message! Not enough memory?");
   }
 
   message->type = CL_CON_REQ;
   message->cl_con_req.name = calloc(strlen(username) + 1, sizeof(char));
   if (!message->cl_con_req.name) {
-    //TODO
+    error(true, "Could not create message! Not enough memory?");
   }
   message->cl_con_req.length = strlen(username) + 1;
   strcpy(message->cl_con_req.name, username);
@@ -101,6 +95,7 @@ client_connection_t * connection_setup(const char * server_hostname, const char 
   cli_conn->sock = socket(cli_conn->server_addr_info->ai_family,
                           cli_conn->server_addr_info->ai_socktype,
                           cli_conn->server_addr_info->ai_protocol);
+  
   if (cli_conn->sock < 0) {
     error(true, "Could not create socket!");
   }
@@ -122,7 +117,10 @@ client_connection_t * connection_setup(const char * server_hostname, const char 
           cli_conn->server_addr_info->ai_addr = (struct sockaddr *)addr;
 
           info("Verbindung akzeptiert. Der Port für die weitere Kommunikation lautet %u.", ntohs(addr->sin_port));
-
+          
+          client_message_delete(message);
+          server_message_delete(response);
+          
           return cli_conn;
         } else {
           error(true, "Verbindung fehlgeschlagen. Benutzername %s bereits vergeben.", username);
@@ -130,7 +128,10 @@ client_connection_t * connection_setup(const char * server_hostname, const char 
       }
     }
   }
-
+  
+  client_message_delete(message);
+  if (response) server_message_delete(response);
+  
   error(true, "Verbindung fehlgeschlagen. Wartezeit verstrichen.");
   return NULL;  // error terminate
 }
@@ -173,9 +174,11 @@ server_message_t * connection_recv_client_message(client_connection_t * cli_conn
   memset(buff, 0, MAX_SERVER_MSG_SIZE);
   if (recvfrom(cli_conn->sock, buff, sizeof(buff), 0,
         (struct sockaddr *)cli_conn->server_addr_info->ai_addr, &slen) < 0) {
-/*
+
+#ifdef DEBUG
     perror("recvfrom()");
-*/
+#endif
+    
     return NULL;
   }
   return server_message_read(buff);
@@ -220,7 +223,7 @@ void connection_handle_socks(client_connection_t * cli_conn, int timeout_sec) {
     if (FD_ISSET(cli_conn->sock, &read_fds)) {
       srv_msg = connection_recv_client_message(cli_conn);
       handle_server_message(srv_msg);
-      free(srv_msg);
+      server_message_delete(srv_msg);
     } 
     if (FD_ISSET(STDIN_FILENO, &read_fds)) {
       readline(STDIN_FILENO, buff, MAX_CLIENT_MSG_SIZE);
@@ -230,7 +233,7 @@ void connection_handle_socks(client_connection_t * cli_conn, int timeout_sec) {
           connection_close(cli_conn);
         } else {
           size = connection_send_client_message(cli_conn, cli_msg);
-          free(cli_msg);
+          client_message_delete(cli_msg);
 #ifdef DEBUG
           info ("send data: %d", size);
 #endif
@@ -332,7 +335,7 @@ client_message_t * parse_client_message(const char * buf)
       strcpy(message->cl_msg.message, buf + message->cl_msg.room_length);
 
     } else {
-      free(message);
+      client_message_delete(message);
       return NULL;
     }
   }
