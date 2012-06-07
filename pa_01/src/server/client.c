@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
+#include <string.h>
 
 #include "client.h"
 #include "../common/chat_user.h"
