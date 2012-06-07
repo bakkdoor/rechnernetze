@@ -242,6 +242,7 @@ void connection_handle_socks(client_connection_t * cli_conn, int timeout_sec) {
 
 void handle_server_message(server_message_t * msg) {
   char format[MAX_SERVER_MSG_SIZE];
+  memset(format, 0, MAX_SERVER_MSG_SIZE);
   
   switch(msg->type) {
     case SV_ROOM_MSG:
@@ -273,8 +274,6 @@ void handle_server_message(server_message_t * msg) {
     default:
       assert(0);
   }
-  
-  server_message_delete(msg);
 }
 
 client_message_t * parse_client_message(const char * buf)
