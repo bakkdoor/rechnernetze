@@ -241,33 +241,40 @@ void connection_handle_socks(client_connection_t * cli_conn, int timeout_sec) {
 }
 
 void handle_server_message(server_message_t * msg) {
-
+  char format[MAX_SERVER_MSG_SIZE];
+  
   switch(msg->type) {
     case SV_ROOM_MSG:
       switch(msg->sv_room_msg.action) {
         case SV_ROOM_MSG_ACTION_JOIN:
-          info("%s hat den raum %s betreten.", msg->sv_room_msg.user, msg->sv_room_msg.room);
+          sprintf(format, "%%%us hat den raum %%%us betreten.", msg->sv_room_msg.user_length, msg->sv_room_msg.room_length);
+          info(format, msg->sv_room_msg.user, msg->sv_room_msg.room);
           break;
         case SV_ROOM_MSG_ACTION_LEAVE:
-          info("%s hat den raum %s verlassen.", msg->sv_room_msg.user, msg->sv_room_msg.room);
+          sprintf(format, "%%%us hat den raum %%%us verlassen.", msg->sv_room_msg.user_length, msg->sv_room_msg.room_length);
+          info(format, msg->sv_room_msg.user, msg->sv_room_msg.room);
           break;
         default: 
           assert(0);
       }
       break;
     case SV_AMSG:
-      printf("%s - %s: %s\n", msg->sv_amsg.room, msg->sv_amsg.user, msg->sv_amsg.msg);
+      sprintf(format, "%%%us - %%%us: %%%us\n", msg->sv_amsg.room_length, msg->sv_amsg.user_length, msg->sv_amsg.msg_length);
+      printf(format, msg->sv_amsg.room, msg->sv_amsg.user, msg->sv_amsg.msg);
       break;
     case SV_DISC_REP:
       info("Verbindung erfolgreich beendet.");
       exit(0);
       break;
     case SV_DISC_AMSG:
-      info("%s hat das System verlassen.", msg->sv_disc_amsg.user);
+      sprintf(format, "%%%us hat das System verlassen.", msg->sv_disc_amsg.user_length);
+      info(format, msg->sv_disc_amsg.user);
       break;
     default:
       assert(0);
   }
+  
+  server_message_delete(msg);
 }
 
 client_message_t * parse_client_message(const char * buf)
