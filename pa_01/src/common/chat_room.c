@@ -47,6 +47,16 @@ void chat_room_add_user(chat_room_t * room, chat_user_t * user)
   list_insert(room->users, user);
 }
 
+void chat_room_remove_user(chat_room_t * room, chat_user_t * user) 
+{
+  if (!room)
+    return;
+  if (!user)
+    return;
+  
+  list_remove(room->users, user, true, NULL, NULL);
+}
+
 void chat_room_send_message(const chat_user_t * user, const char * message)
 {
   /* TODO */
