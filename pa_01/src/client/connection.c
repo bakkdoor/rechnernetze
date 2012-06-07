@@ -85,12 +85,12 @@ client_connection_t * connection_setup(const char * server_hostname, const char 
   }
 
   message->type = CL_CON_REQ;
-  message->cl_con_req.name = calloc(strlen(username) + 1, sizeof(char));
+  message->cl_con_req.length = strlen(username);
+  message->cl_con_req.name = calloc(message->cl_con_req.length, sizeof(char));
   if (!message->cl_con_req.name) {
     error(true, "Could not create message! Not enough memory?");
   }
-  message->cl_con_req.length = strlen(username) + 1;
-  strcpy(message->cl_con_req.name, username);
+  strncpy(message->cl_con_req.name, username, message->cl_con_req.length);
 
   cli_conn->sock = socket(cli_conn->server_addr_info->ai_family,
                           cli_conn->server_addr_info->ai_socktype,
@@ -289,24 +289,24 @@ client_message_t * parse_client_message(const char * buf)
   if (strncmp(JOIN_PRE_CMD, buf, strlen(JOIN_PRE_CMD)) == 0) {
     message->type = CL_ROOM_MSG;
     message->cl_room_msg.action = CL_ROOM_MSG_ACTION_JOIN;
-    message->cl_room_msg.length = strlen(buf + strlen(JOIN_PRE_CMD)) + 1;
+    message->cl_room_msg.length = strlen(buf + strlen(JOIN_PRE_CMD) +1);
     message->cl_room_msg.room_name = calloc(message->cl_room_msg.length, sizeof(char));
     if (!message->cl_room_msg.room_name) {
       //TODO
     }
-    if (!strcpy(message->cl_room_msg.room_name, buf + strlen(JOIN_PRE_CMD))) {
+    if (!strncpy(message->cl_room_msg.room_name, buf + strlen(JOIN_PRE_CMD), message->cl_room_msg.length)) {
       //TODO
     }
 
   } else if (strncmp(LEAVE_PRE_CMD, buf, strlen(LEAVE_PRE_CMD)) == 0) {
     message->type = CL_ROOM_MSG;
     message->cl_room_msg.action = CL_ROOM_MSG_ACTION_LEAVE;
-    message->cl_room_msg.length = strlen(buf + strlen(LEAVE_PRE_CMD)) + 1;
+    message->cl_room_msg.length = strlen(buf + strlen(LEAVE_PRE_CMD) +1);
     message->cl_room_msg.room_name = calloc(message->cl_room_msg.length, sizeof(char));
     if (!message->cl_room_msg.room_name) {
       //TODO
     }
-    if (!strcpy(message->cl_room_msg.room_name, buf + strlen(LEAVE_PRE_CMD))) {
+    if (!strncpy(message->cl_room_msg.room_name, buf + strlen(LEAVE_PRE_CMD), message->cl_room_msg.length)) {
       //TODO
     }
 
@@ -318,21 +318,21 @@ client_message_t * parse_client_message(const char * buf)
 
     if (strchr(buf, ' ') > buf // contains a blank char
             && strchr(buf, ' ') < buf + strlen(buf)) { // has chars after blank
-      message->cl_msg.room_length = strchr(buf, ' ') - buf + 1;
+      message->cl_msg.room_length = strchr(buf, ' ') - buf;
       message->cl_msg.room_name = calloc(message->cl_msg.room_length, sizeof(char));
       if (!message->cl_msg.room_name) {
         //TODO
       }
 
-      strncpy(message->cl_msg.room_name, buf, message->cl_msg.room_length -1);
+      strncpy(message->cl_msg.room_name, buf, message->cl_msg.room_length);
 
-      message->cl_msg.msg_length = strlen(buf + message->cl_msg.room_length) +1;
+      message->cl_msg.msg_length = strlen(buf + message->cl_msg.room_length + 1) - 1;
       message->cl_msg.message = calloc(message->cl_msg.msg_length, sizeof(char));
       if (!message->cl_msg.message) {
         //TODO
       }
 
-      strcpy(message->cl_msg.message, buf + message->cl_msg.room_length);
+      strncpy(message->cl_msg.message, buf + message->cl_msg.room_length + 1, message->cl_msg.msg_length);
 
     } else {
       client_message_delete(message);
