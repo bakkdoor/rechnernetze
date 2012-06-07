@@ -234,9 +234,6 @@ void connection_handle_socks(client_connection_t * cli_conn, int timeout_sec) {
         } else {
           size = connection_send_client_message(cli_conn, cli_msg);
           client_message_delete(cli_msg);
-#ifdef DEBUG
-          info ("send data: %d", size);
-#endif
         }
       }
     }
