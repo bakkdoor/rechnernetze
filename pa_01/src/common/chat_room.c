@@ -10,6 +10,7 @@ chat_room_t * chat_room_new(const char * name)
     return NULL;
 
   room->name = calloc(strlen(name) + 1, sizeof(char));
+  strcpy(room->name, name);
   room->users = list_new();
 
   return room;
