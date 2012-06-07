@@ -150,15 +150,12 @@ client_message_t * client_message_read(char * buf)
 
 size_t client_message_write(client_message_t * msg, char * buf)
 {
-  size_t len;
+  char * buf_start = buf;
 
   memcpy(buf++, &msg->type, 1);
-  len = 1;
 
   switch(msg->type) {
   case CL_CON_REQ:
-    len += 4 + msg->cl_con_req.length;
-
     write_int(buf, msg->cl_con_req.length, 4);
     buf += 4;
 
@@ -167,8 +164,6 @@ size_t client_message_write(client_message_t * msg, char * buf)
     break;
 
   case CL_ROOM_MSG:
-    len += 4 + msg->cl_room_msg.length + 1;
-
     write_int(buf, msg->cl_room_msg.length, 4);
     buf += 4;
 
@@ -180,8 +175,6 @@ size_t client_message_write(client_message_t * msg, char * buf)
     break;
 
   case CL_MSG:
-    len += 4 + msg->cl_msg.room_length + msg->cl_msg.msg_length;
-
     write_int(buf, msg->cl_msg.room_length, 4);
     buf += 4;
 
@@ -205,7 +198,8 @@ size_t client_message_write(client_message_t * msg, char * buf)
     break;
   }
 
-  return len;
+
+  return buf - buf_start; /* total message length in bytes */
 }
 
 void server_message_delete(server_message_t * msg) {
