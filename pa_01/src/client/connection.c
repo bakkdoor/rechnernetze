@@ -242,6 +242,32 @@ void connection_handle_socks(client_connection_t * cli_conn, int timeout_sec) {
 
 void handle_server_message(server_message_t * msg) {
 
+  switch(msg->type) {
+    case SV_ROOM_MSG:
+      switch(msg->sv_room_msg.action) {
+        case SV_ROOM_MSG_ACTION_JOIN:
+          info("%s hat den raum %s betreten.", msg->sv_room_msg.user, msg->sv_room_msg.room);
+          break;
+        case SV_ROOM_MSG_ACTION_LEAVE:
+          info("%s hat den raum %s verlassen.", msg->sv_room_msg.user, msg->sv_room_msg.room);
+          break;
+        default: 
+          assert(0);
+      }
+      break;
+    case SV_AMSG:
+      printf("%s - %s: %s\n", msg->sv_amsg.room, msg->sv_amsg.user, msg->sv_amsg.msg);
+      break;
+    case SV_DISC_REP:
+      info("Verbindung erfolgreich beendet.");
+      exit(0);
+      break;
+    case SV_DISC_AMSG:
+      info("%s hat das System verlassen.", msg->sv_disc_amsg.user);
+      break;
+    default:
+      assert(0);
+  }
 }
 
 client_message_t * parse_client_message(const char * buf)

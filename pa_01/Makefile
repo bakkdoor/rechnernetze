@@ -32,6 +32,9 @@ clean:
 
 run_client: $(CLIENT)
 	./$(CLIENT) $(ADDR) $(PORT) $(NAME)
+	
+run_client2: $(CLIENT)
+	./$(CLIENT) $(ADDR) $(PORT) $(NAME)2
 
 run_server: $(SERVER)
 	./$(SERVER) $(PORT)
