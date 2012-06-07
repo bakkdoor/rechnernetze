@@ -256,6 +256,7 @@ void server_connection_handle_message(server_connection_t * server_conn, client_
       list_insert(client->chat_user->rooms, room);
       list_insert(server_conn->rooms, room);
     } else {
+      info("room not found: %s", _room_name);
       room = chat_room_new(msg->cl_room_msg.room_name);
 
       if(!room) {
@@ -278,12 +279,14 @@ void server_connection_handle_message(server_connection_t * server_conn, client_
     reply->sv_room_msg.user = calloc(reply->sv_room_msg.user_length, sizeof(char));
     strcpy(reply->sv_room_msg.user, client->chat_user->name);
 
+    info("room name joined: %s", room->name);
     server_connection_room_broadcast(server_conn, reply, room->name);
     break;
 
   case CL_MSG:
     reply->type = SV_AMSG;
 
+    info("incoming message: %s (on room: %s)", msg->cl_msg.message, msg->cl_msg.room_name);
     reply->sv_amsg.room_length = msg->cl_msg.room_length;
     reply->sv_amsg.room = calloc(reply->sv_amsg.room_length, sizeof(char));
     strcpy(reply->sv_amsg.room, msg->cl_msg.room_name);
@@ -297,6 +300,7 @@ void server_connection_handle_message(server_connection_t * server_conn, client_
     strcpy(reply->sv_amsg.msg, msg->cl_msg.message);
 
     server_connection_room_broadcast(server_conn, reply, msg->cl_msg.room_name);
+    info("Broadcasting to room %s : %s", msg->cl_msg.room_name, msg->cl_msg.message);
     break;
 
   case CL_DISC_REQ:
@@ -380,14 +384,17 @@ void server_connection_handle_incoming(server_connection_t * server_conn)
   server_connection_handle_client_messages(server_conn);
 }
 
-void server_connection_room_broadcast(server_connection_t * server_conn, server_message_t * msg, char * room)
+void server_connection_room_broadcast(server_connection_t * server_conn, server_message_t * msg, char * room_name)
 {
   client_t * client;
   list_node_t * node = server_conn->clients->first;
   for(; node; node = node->next) {
     client = node->data;
-    if(chat_user_in_room(client->chat_user, room)) {
+    if(chat_user_in_room(client->chat_user, room_name)) {
+      info("user: %s in room: %s", client->chat_user->name, room_name);
       client_send_message(client, msg);
+    } else {
+      info("user: %s not in room: %s", client->chat_user->name, room_name);
     }
   }
 }
