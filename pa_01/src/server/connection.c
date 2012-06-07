@@ -271,13 +271,13 @@ void server_connection_handle_message(server_connection_t * server_conn, client_
 
     reply->type = SV_ROOM_MSG;
 
-    reply->sv_room_msg.room_length = strlen(room->name) + 1;
+    reply->sv_room_msg.room_length = strlen(room->name);
     reply->sv_room_msg.room = calloc(reply->sv_room_msg.room_length, sizeof(char));
-    strcpy(reply->sv_room_msg.room, room->name);
+    memcpy(reply->sv_room_msg.room, room->name, reply->sv_room_msg.room_length);
 
-    reply->sv_room_msg.user_length = strlen(client->chat_user->name) + 1;
+    reply->sv_room_msg.user_length = strlen(client->chat_user->name);
     reply->sv_room_msg.user = calloc(reply->sv_room_msg.user_length, sizeof(char));
-    strcpy(reply->sv_room_msg.user, client->chat_user->name);
+    memcpy(reply->sv_room_msg.user, client->chat_user->name, reply->sv_room_msg.user_length);
 
     info("room name joined: %s", room->name);
     server_connection_room_broadcast(server_conn, reply, room->name);
@@ -289,15 +289,15 @@ void server_connection_handle_message(server_connection_t * server_conn, client_
     info("incoming message: %s (on room: %s)", msg->cl_msg.message, msg->cl_msg.room_name);
     reply->sv_amsg.room_length = msg->cl_msg.room_length;
     reply->sv_amsg.room = calloc(reply->sv_amsg.room_length, sizeof(char));
-    strcpy(reply->sv_amsg.room, msg->cl_msg.room_name);
+    memcpy(reply->sv_amsg.room, msg->cl_msg.room_name, reply->sv_amsg.room_length);
 
-    reply->sv_amsg.user_length = strlen(client->chat_user->name) + 1;
+    reply->sv_amsg.user_length = strlen(client->chat_user->name);
     reply->sv_amsg.user = calloc(reply->sv_amsg.user_length, sizeof(char));
-    strcpy(reply->sv_amsg.user, client->chat_user->name);
+    memcpy(reply->sv_amsg.user, client->chat_user->name, reply->sv_amsg.user_length);
 
     reply->sv_amsg.msg_length = msg->cl_msg.msg_length;
     reply->sv_amsg.msg = calloc(reply->sv_amsg.msg_length, sizeof(char));
-    strcpy(reply->sv_amsg.msg, msg->cl_msg.message);
+    memcpy(reply->sv_amsg.msg, msg->cl_msg.message, reply->sv_amsg.msg_length);
 
     server_connection_room_broadcast(server_conn, reply, msg->cl_msg.room_name);
     info("Broadcasting to room %s : %s", msg->cl_msg.room_name, msg->cl_msg.message);
@@ -313,9 +313,9 @@ void server_connection_handle_message(server_connection_t * server_conn, client_
     reply = calloc(1, sizeof(server_message_t));
     reply->type = SV_DISC_AMSG;
 
-    reply->sv_disc_amsg.user_length = strlen(client->chat_user->name) + 1;
+    reply->sv_disc_amsg.user_length = strlen(client->chat_user->name);
     reply->sv_disc_amsg.user = calloc(reply->sv_disc_amsg.user_length, sizeof(char));
-    strcpy(reply->sv_disc_amsg.user, client->chat_user->name);
+    memcpy(reply->sv_disc_amsg.user, client->chat_user->name, reply->sv_disc_amsg.user_length);
 
     current = client->chat_user->rooms->first;
 
