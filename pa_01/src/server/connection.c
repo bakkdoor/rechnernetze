@@ -270,6 +270,9 @@ void server_connection_handle_message(server_connection_t * server_conn, client_
     }
 
     reply->type = SV_ROOM_MSG;
+    reply->sv_room_msg.action = msg->cl_room_msg.action;
+
+    /* TODO: check for action and remove client from chat_room if action == CL_ROOM_MSG_ACTION_LEAVE */
 
     reply->sv_room_msg.room_length = strlen(room->name);
     reply->sv_room_msg.room = calloc(reply->sv_room_msg.room_length, sizeof(char));
