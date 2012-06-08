@@ -33,7 +33,7 @@ char * read_string(char * buf, size_t length)
   return tmp;
 }
 
-void write_int(void * buf, unsigned int i, size_t n_bytes)
+void write_int(char * buf, unsigned int i, size_t n_bytes)
 {
   unsigned int net_int = htonl(i);
   if(n_bytes == 1) {
@@ -42,12 +42,12 @@ void write_int(void * buf, unsigned int i, size_t n_bytes)
   memcpy(buf, &net_int, n_bytes);
 }
 
-void write_byte(void * buf, uint8_t i)
+void write_byte(char * buf, uint8_t i)
 {
   memcpy(buf, &i, 1);
 }
 
-void write_string(void * buf, char * str, size_t length)
+void write_string(char * buf, char * str, size_t length)
 {
   memcpy(buf, str, length);
 }
