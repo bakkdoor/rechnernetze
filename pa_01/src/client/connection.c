@@ -288,11 +288,11 @@ void handle_server_message(server_message_t * msg) {
     case SV_ROOM_MSG:
       switch(msg->sv_room_msg.action) {
         case SV_ROOM_MSG_ACTION_JOIN:
-          sprintf(format, "%%%us hat den raum %%%us betreten.", msg->sv_room_msg.user_length, msg->sv_room_msg.room_length);
+          sprintf(format, "%%%us hat den Raum %%%us betreten.", msg->sv_room_msg.user_length, msg->sv_room_msg.room_length);
           info(format, msg->sv_room_msg.user, msg->sv_room_msg.room);
           break;
         case SV_ROOM_MSG_ACTION_LEAVE:
-          sprintf(format, "%%%us hat den raum %%%us verlassen.", msg->sv_room_msg.user_length, msg->sv_room_msg.room_length);
+          sprintf(format, "%%%us hat den Raum %%%us verlassen.", msg->sv_room_msg.user_length, msg->sv_room_msg.room_length);
           info(format, msg->sv_room_msg.user, msg->sv_room_msg.room);
           break;
         default: 
