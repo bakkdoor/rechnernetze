@@ -33,7 +33,7 @@ char * read_string(char * buf, size_t length)
   return tmp;
 }
 
-void write_int(void * buf, unsigned int i, size_t n_bytes)
+void write_int(char * buf, unsigned int i, size_t n_bytes)
 {
   unsigned int net_int = htonl(i);
   if(n_bytes == 1) {
@@ -42,12 +42,12 @@ void write_int(void * buf, unsigned int i, size_t n_bytes)
   memcpy(buf, &net_int, n_bytes);
 }
 
-void write_byte(void * buf, uint8_t i)
+void write_byte(char * buf, uint8_t i)
 {
   memcpy(buf, &i, 1);
 }
 
-void write_string(void * buf, char * str, size_t length)
+void write_string(char * buf, char * str, size_t length)
 {
   memcpy(buf, str, length);
 }
@@ -323,15 +323,12 @@ server_message_t * server_message_read(char * buf)
 
 size_t server_message_write(server_message_t * msg, char * buf)
 {
-  size_t len;
-
+  char * buf_start = buf;
   memcpy(buf, &msg->type, 1);
   buf++;
-  len = 1;
 
   switch(msg->type) {
   case SV_CON_REP:
-    len += 1 + 4;
     write_byte(buf, msg->sv_con_rep.state);
     buf++;
     write_int(buf, msg->sv_con_rep.comm_port, 4);
@@ -339,8 +336,6 @@ size_t server_message_write(server_message_t * msg, char * buf)
     break;
 
   case SV_ROOM_MSG:
-    len += 4 + msg->sv_room_msg.room_length + 4 + msg->sv_room_msg.user_length + 1;
-
     write_int(buf, msg->sv_room_msg.room_length, 4);
     buf += 4;
 
@@ -358,8 +353,6 @@ size_t server_message_write(server_message_t * msg, char * buf)
     break;
 
   case SV_AMSG:
-    len += 4 + msg->sv_amsg.room_length + 4 + msg->sv_amsg.user_length + 4 + msg->sv_amsg.msg_length;
-
     write_int(buf, msg->sv_amsg.room_length, 4);
     buf += 4;
 
@@ -384,8 +377,6 @@ size_t server_message_write(server_message_t * msg, char * buf)
     break;
 
   case SV_DISC_AMSG:
-    len += 4 + msg->sv_disc_amsg.user_length;
-
     write_int(buf, msg->sv_disc_amsg.user_length, 4);
     buf += 4;
 
@@ -394,5 +385,5 @@ size_t server_message_write(server_message_t * msg, char * buf)
     break;
   }
 
-  return len;
+  return buf - buf_start;
 }
