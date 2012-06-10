@@ -143,6 +143,7 @@ void list_remove(list_t * list, void * data, bool delete_all, int (* list_compar
         list->first = current->next;
       }
 
+      prev = current;
       current = current->next;
 
       free(tmp);
@@ -151,9 +152,9 @@ void list_remove(list_t * list, void * data, bool delete_all, int (* list_compar
       if(!delete_all)
         break;
     } else {
+      prev = current;
       current = current->next;
     }
-    prev = current;
   }
 }
 
