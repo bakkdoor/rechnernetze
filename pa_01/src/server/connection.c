@@ -290,7 +290,7 @@ void server_connection_handle_message(server_connection_t * server_conn, client_
 
         if(!room) {
           error(false, "Could not create new chatroom with name: %s", msg->cl_room_msg.room_name);
-          return;
+          break;
         }
 
         server_connection_add_room(server_conn, room);
@@ -373,9 +373,9 @@ void server_connection_handle_message(server_connection_t * server_conn, client_
 
   default:
     break;
-
-    server_message_delete(reply);
   }
+
+  server_message_delete(reply);
 }
 
 void _server_connection_handle_message(void * client_with_message)
