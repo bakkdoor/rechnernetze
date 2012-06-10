@@ -6,7 +6,8 @@
 #include "../common/messages.h"
 
 /**
- Client connection struct. Holds Server network information (socket, hostname,...) and username.
+ * Client connection struct. 
+ * Holds server network information (socket, hostname,...) and username.
  */
 typedef struct client_connection client_connection_t;
 

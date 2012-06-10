@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -5,10 +8,6 @@
 #include <netdb.h>
 #include <sys/select.h>
 #include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <fcntl.h>
 
 #include "connection.h"
 #include "../common/output.h"
@@ -25,7 +24,6 @@
 struct client_connection {
   int sock;
   struct addrinfo * server_addr_info;
-  char * username;
 };
 
 client_connection_t * connection_setup(const char * server_hostname, const char * server_port, const char * username) {
@@ -36,10 +34,9 @@ client_connection_t * connection_setup(const char * server_hostname, const char 
   server_message_t * response;
   struct sockaddr_in * addr;
 
-
   cli_conn = calloc(1, sizeof (client_connection_t));
   if (!cli_conn) {
-    //TODO
+    error(true, "Could not create connection! Not enough memory?");
   }
 
   // resolve hostname to ip
@@ -68,13 +65,6 @@ client_connection_t * connection_setup(const char * server_hostname, const char 
           ntohs(addr->sin_port));
 #endif
   // end resolve hostname to ip
-
-  // init user
-  cli_conn->username = calloc(strlen(username) +1, sizeof(char));
-  if (!cli_conn->username) {
-    error(true, "Could not setup username! Not enough memory?");
-  }
-  strcpy(cli_conn->username, username);
 
   message = calloc(1, sizeof(client_message_t));
   if (!message) {
@@ -147,7 +137,6 @@ void connection_close(client_connection_t * cli_conn) {
 }
 
 void connection_delete(client_connection_t * cli_conn) {
-  free(cli_conn->username);
   freeaddrinfo(cli_conn->server_addr_info);
   free(cli_conn);
 }
@@ -286,10 +275,12 @@ client_message_t * parse_client_message(const char * buf)
     message->cl_room_msg.length = strlen(buf + strlen(JOIN_PRE_CMD) +1);
     message->cl_room_msg.room_name = calloc(message->cl_room_msg.length, sizeof(char));
     if (!message->cl_room_msg.room_name) {
-      //TODO
+      error(false, "Could not create message! Not enough memory?");
+      return NULL;
     }
     if (!strncpy(message->cl_room_msg.room_name, buf + strlen(JOIN_PRE_CMD), message->cl_room_msg.length)) {
-      //TODO
+      error(false, "Could not create message! Not enough memory?");
+      return NULL;
     }
 
   } else if (strncmp(LEAVE_PRE_CMD, buf, strlen(LEAVE_PRE_CMD)) == 0) {
@@ -298,10 +289,12 @@ client_message_t * parse_client_message(const char * buf)
     message->cl_room_msg.length = strlen(buf + strlen(LEAVE_PRE_CMD) +1);
     message->cl_room_msg.room_name = calloc(message->cl_room_msg.length, sizeof(char));
     if (!message->cl_room_msg.room_name) {
-      //TODO
+      error(false, "Could not create message! Not enough memory?");
+      return NULL;
     }
     if (!strncpy(message->cl_room_msg.room_name, buf + strlen(LEAVE_PRE_CMD), message->cl_room_msg.length)) {
-      //TODO
+      error(false, "Could not create message! Not enough memory?");
+      return NULL;
     }
 
   } else if (strncmp(DISCONNECT_CMD, buf, strlen(DISCONNECT_CMD)) == 0) {
@@ -315,7 +308,8 @@ client_message_t * parse_client_message(const char * buf)
       message->cl_msg.room_length = strchr(buf, ' ') - buf;
       message->cl_msg.room_name = calloc(message->cl_msg.room_length, sizeof(char));
       if (!message->cl_msg.room_name) {
-        //TODO
+        error(false, "Could not create message! Not enough memory?");
+        return NULL;
       }
 
       strncpy(message->cl_msg.room_name, buf, message->cl_msg.room_length);
@@ -323,7 +317,8 @@ client_message_t * parse_client_message(const char * buf)
       message->cl_msg.msg_length = strlen(buf + message->cl_msg.room_length + 1) - 1;
       message->cl_msg.message = calloc(message->cl_msg.msg_length, sizeof(char));
       if (!message->cl_msg.message) {
-        //TODO
+        error(false, "Could not create message! Not enough memory?");
+        return NULL;
       }
 
       strncpy(message->cl_msg.message, buf + message->cl_msg.room_length + 1, message->cl_msg.msg_length);
