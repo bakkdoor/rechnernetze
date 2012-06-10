@@ -274,6 +274,9 @@ server_message_t * server_message_read(char * buf)
 
     message->sv_room_msg.user = read_string(buf, length);
     buf += length;
+
+    message->sv_room_msg.action = read_byte(buf);
+    buf++;
     break;
 
   case SV_AMSG:
