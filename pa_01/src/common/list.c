@@ -7,7 +7,7 @@
 
 list_node_t * node_new(void * data)
 {
-  list_node_t * node = malloc(sizeof(list_node_t));
+  list_node_t * node = calloc(1, sizeof(list_node_t));
   if(node) {
     node->next = NULL;
     node->data = data;
@@ -21,7 +21,7 @@ list_node_t * node_new(void * data)
 
 list_t * list_new(void)
 {
-  list_t * list = malloc(sizeof(list_t));
+  list_t * list = calloc(1, sizeof(list_t));
   if(list) {
     list->first = NULL;
     list->size = 0;
