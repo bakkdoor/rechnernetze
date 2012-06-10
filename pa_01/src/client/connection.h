@@ -7,7 +7,7 @@
 
 /**
  * Client connection struct. 
- * Holds server network information (socket, hostname,...) and username.
+ * Holds server network information (socket, hostname,...).
  */
 typedef struct client_connection client_connection_t;
 
@@ -16,12 +16,12 @@ typedef struct client_connection client_connection_t;
  * @param server_hostname server hostname or ip address
  * @param server_port server port
  * @param username user name
- * @return sonnection struct or NULL if can not communicate with server or username is allready in use
+ * @return connection struct or NULL if can not communicate with server or username is allready in use
  */
 client_connection_t * connection_setup(const char * server_hostname, const char * server_port, const char * username);
 
 /**
- * Parse given buffer and creates a client message struct for this.
+ * Parse given buffer and creates a client message struct.
  * @return client message struct or NULL if fail (wrong input,...)
  */
 client_message_t * parse_client_message(const char * buf);
@@ -35,7 +35,7 @@ client_message_t * parse_client_message(const char * buf);
 int connection_send_client_message(client_connection_t * cli_conn, client_message_t * msg);
 
 /**
- * Handle input data (typed in from user at stdin or incomming from server).
+ * Handle input data (typed in from user at stdin or incomming from server socket).
  * @param cli_conn connection struct
  * @param timeout_sec timeout in seconds
  */

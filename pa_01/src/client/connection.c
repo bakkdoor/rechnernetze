@@ -35,7 +35,7 @@ void connection_delete(client_connection_t * cli_conn);
 void handle_server_message(server_message_t * msg);
 
 /**
- * Chack if connection socket has data to recieve.
+ * Check if connection socket has data to recieve.
  * @param cli_conn connection struct
  * @param timeout_sec timeout in seconds
  * @return > 0 if socket has incomming data, 0 else
@@ -50,7 +50,9 @@ int connection_has_incoming_data(client_connection_t * cli_conn, int timeout_sec
 server_message_t * connection_recv_client_message(client_connection_t * cli_conn);
 
 /**
- * Close connection. Send disconnect request to server and wait of reply. Close connection after server reply or three requests are send.
+ * Close connection. 
+ * Send disconnect request to server and wait for reply. 
+ * Close connection three attemts or get server reply.
  * @param cli_conn connection struct
  */
 void connection_close(client_connection_t * cli_conn);
