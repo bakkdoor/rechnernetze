@@ -276,10 +276,12 @@ client_message_t * parse_client_message(const char * buf)
     message->cl_room_msg.room_name = calloc(message->cl_room_msg.length, sizeof(char));
     if (!message->cl_room_msg.room_name) {
       error(false, "Could not create message! Not enough memory?");
+      client_message_delete(message);
       return NULL;
     }
     if (!strncpy(message->cl_room_msg.room_name, buf + strlen(JOIN_PRE_CMD), message->cl_room_msg.length)) {
-      error(false, "Could not create message! Not enough memory?");
+      error(false, "Could not create message!");
+      client_message_delete(message);
       return NULL;
     }
 
@@ -290,10 +292,12 @@ client_message_t * parse_client_message(const char * buf)
     message->cl_room_msg.room_name = calloc(message->cl_room_msg.length, sizeof(char));
     if (!message->cl_room_msg.room_name) {
       error(false, "Could not create message! Not enough memory?");
+      client_message_delete(message);
       return NULL;
     }
     if (!strncpy(message->cl_room_msg.room_name, buf + strlen(LEAVE_PRE_CMD), message->cl_room_msg.length)) {
-      error(false, "Could not create message! Not enough memory?");
+      error(false, "Could not create message!");
+      client_message_delete(message);
       return NULL;
     }
 
@@ -309,6 +313,7 @@ client_message_t * parse_client_message(const char * buf)
       message->cl_msg.room_name = calloc(message->cl_msg.room_length, sizeof(char));
       if (!message->cl_msg.room_name) {
         error(false, "Could not create message! Not enough memory?");
+        client_message_delete(message);
         return NULL;
       }
 
@@ -318,6 +323,7 @@ client_message_t * parse_client_message(const char * buf)
       message->cl_msg.message = calloc(message->cl_msg.msg_length, sizeof(char));
       if (!message->cl_msg.message) {
         error(false, "Could not create message! Not enough memory?");
+        client_message_delete(message);
         return NULL;
       }
 
