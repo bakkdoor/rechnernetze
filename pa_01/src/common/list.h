@@ -9,12 +9,12 @@
  */
 
 typedef struct node {
-  struct node *next;
-  void *data;
+  struct node * next;
+  void * data;
 } list_node_t;
 
 typedef struct list {
-  list_node_t *first;
+  list_node_t * first;
   size_t size;
 } list_t;
 
