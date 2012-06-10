@@ -23,7 +23,47 @@
 #define LEAVE_PRE_CMD "/leave "
 #define DISCONNECT_CMD "/disconnect"
 
-client_message_t * parse_client_message(const char * buf);
+/**
+ * Delete connection stuct. Release allocated memory.
+ * @param cli_conn connection struct
+ */
+void connection_delete(client_connection_t * cli_conn);
+
+/**
+ * Handle given server message. 
+ * @param msg server message struct
+ */
+void handle_server_message(server_message_t * msg);
+
+/**
+ * Chack if connection socket has data to recieve.
+ * @param cli_conn connection struct
+ * @param timeout_sec timeout in seconds
+ * @return > 0 if socket has incomming data, 0 else
+ */
+int connection_has_incoming_data(client_connection_t * cli_conn, int timeout_sec);
+
+/**
+ * Send message to server.
+ * @param cli_conn connection struct
+ * @param msg message to send
+ * @return bytes send or -1 if fail
+ */
+int connection_send_client_message(client_connection_t * cli_conn, client_message_t * msg);
+
+/**
+ * Recieve and parse message from server. 
+ * @param cli_conn connection struct
+ * @return parsed server message struct
+ */
+server_message_t * connection_recv_client_message(client_connection_t * cli_conn);
+
+/**
+ * Close connection. Send disconnect request to server and wait of reply. Close connection after server reply or three requests are send.
+ * @param cli_conn connection struct
+ */
+void connection_close(client_connection_t * cli_conn);
+
 
 struct client_connection {
   int sock;
@@ -248,11 +288,11 @@ void handle_server_message(server_message_t * msg) {
     case SV_ROOM_MSG:
       switch(msg->sv_room_msg.action) {
         case SV_ROOM_MSG_ACTION_JOIN:
-          sprintf(format, "%%%us hat den raum %%%us betreten.", msg->sv_room_msg.user_length, msg->sv_room_msg.room_length);
+          sprintf(format, "%%%us hat den Raum %%%us betreten.", msg->sv_room_msg.user_length, msg->sv_room_msg.room_length);
           info(format, msg->sv_room_msg.user, msg->sv_room_msg.room);
           break;
         case SV_ROOM_MSG_ACTION_LEAVE:
-          sprintf(format, "%%%us hat den raum %%%us verlassen.", msg->sv_room_msg.user_length, msg->sv_room_msg.room_length);
+          sprintf(format, "%%%us hat den Raum %%%us verlassen.", msg->sv_room_msg.user_length, msg->sv_room_msg.room_length);
           info(format, msg->sv_room_msg.user, msg->sv_room_msg.room);
           break;
         default: 
