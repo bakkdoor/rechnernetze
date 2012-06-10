@@ -296,14 +296,13 @@ void server_connection_handle_message(server_connection_t * server_conn, client_
         server_connection_add_room(server_conn, room);
       }
 
-      chat_room_add_user(room, client->chat_user);
-      client_join_room(client, room);
+      client_join_room((client_t *)client, room);
       break;
 
     case CL_ROOM_MSG_ACTION_LEAVE:
       info("User %s leaving room %s", client->chat_user->name, _room_name);
       if (room && chat_room_has_user(room, client->chat_user)) {
-        chat_room_remove_user(room, client->chat_user);
+        client_leave_room((client_t *)client, room);
       }
       break;
 
@@ -399,7 +398,6 @@ void server_connection_handle_client_messages(server_connection_t * server_conn)
   ready_socks = select(server_conn->clients_nfds + 1, &_read_fds, NULL, NULL, &timeout);
 
   if(ready_socks > 0) {
-    info("got sockets: %d", ready_socks);
     clients_with_data = list_filter(server_conn->clients, client_in_fdset);
     incoming_messages = list_map(clients_with_data, _client_read_message);
     list_foreach(incoming_messages, _server_connection_handle_message);
@@ -421,10 +419,9 @@ void server_connection_room_broadcast(server_connection_t * server_conn, server_
   for(; node; node = node->next) {
     client = node->data;
     if(chat_user_in_room(client->chat_user, room_name)) {
-      info("user: %s in room: %s", client->chat_user->name, room_name);
       client_send_message(client, msg);
     } else {
-      info("user: %s not in room: %s", client->chat_user->name, room_name);
+      info("user: %s tried to broadcast to room although he is not in room: %s", client->chat_user->name, room_name);
     }
   }
 }

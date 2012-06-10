@@ -101,7 +101,14 @@ client_message_t * client_read_message(const client_t * client)
   return client_message_read(buf);
 }
 
-void client_join_room(const client_t * client, const chat_room_t * room)
+void client_join_room(client_t * client, chat_room_t * room)
 {
   list_insert(client->chat_user->rooms, (chat_room_t *)room);
+  chat_room_add_user(room, client->chat_user);
+}
+
+void client_leave_room(client_t * client, chat_room_t * room)
+{
+  chat_room_remove_user(room, client->chat_user);
+  list_remove(client->chat_user->rooms, (chat_room_t *)room, true, NULL, NULL);
 }
