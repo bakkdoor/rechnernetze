@@ -9,7 +9,7 @@
 #include "chat_room.h"
 #include "../common/output.h"
 
-client_t * client_new(char * name, struct sockaddr_in * client_addr) {
+client_t * client_new(char * name) {
   client_t * client;
   unsigned int slen = sizeof(struct sockaddr_in);
   struct sockaddr_in addr;
@@ -26,7 +26,7 @@ client_t * client_new(char * name, struct sockaddr_in * client_addr) {
 
   addr.sin_family = AF_INET;
   addr.sin_port = htons(0);
-  addr.sin_addr.s_addr = htonl(INADDR_ANY); /* client_addr->sin_addr.s_addr; */
+  addr.sin_addr.s_addr = htonl(INADDR_ANY);
   client->sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if (client->sock < 0) {
     error(false, "Could not setup user-specific socket for user %s", name);

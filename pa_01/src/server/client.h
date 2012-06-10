@@ -17,10 +17,9 @@ typedef struct client {
 
 /**
  * @param name Username of client
- * @param client_addr sock_addr_in for client
  * @return New client struct.
  **/
-client_t * client_new(char * name, struct sockaddr_in * client_addr);
+client_t * client_new(char * name);
 
 /**
  * @param client Client to be deleted.

@@ -146,7 +146,7 @@ void server_connection_handle_new_clients(server_connection_t * server_conn)
      create new user & client and add them to server_conn's clients list
   */
 
-  client = client_new(message->cl_con_req.name, client_addr);
+  client = client_new(message->cl_con_req.name);
 
   if(client->sock > server_conn->clients_nfds)
     server_conn->clients_nfds = client->sock;
@@ -178,7 +178,9 @@ void server_connection_handle_new_clients(server_connection_t * server_conn)
   buf = calloc(1, MAX_SERVER_MSG_SIZE);
   if(!buf) {
     error(false, "Could not allocate reponse buffer");
+    free(client_addr);
     client_message_delete(message);
+    client_delete(client);
     return;
   }
 
@@ -199,6 +201,7 @@ void server_connection_handle_new_clients(server_connection_t * server_conn)
 
   if(reply.sv_con_rep.state == CON_REP_BAD_USERNAME) {
     close(client->sock);
+    free(client_addr);
     client_delete(client);
   }
 }
