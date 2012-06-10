@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "connection.h"
 #include "../common/output.h"
@@ -15,6 +16,8 @@ int main(int argc, char ** argv) {
   client_connection_t * cli_conn;
   client_message_t * msg;
   char buff[MAX_CLIENT_MSG_SIZE];
+
+  set_show_output_prefix(false);
 
   if (argc < 4) {
     help(argv[0]);
@@ -31,7 +34,7 @@ int main(int argc, char ** argv) {
 
     if (readline(STDIN_FILENO, buff, sizeof (buff)) > 0) {
       msg = parse_client_message(buff);
-      
+
       // exit loop if message is join or disconnect
       if (msg) {
         if (msg->type == CL_ROOM_MSG && msg->cl_room_msg.action == CL_ROOM_MSG_ACTION_JOIN) {
