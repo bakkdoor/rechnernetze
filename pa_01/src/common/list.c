@@ -119,29 +119,39 @@ int list_compare_default(void * a, void * b)
 
 void list_remove(list_t * list, void * data, bool delete_all, int (* list_compare)(void * a, void * b), void (* delete_func)(void * data))  // defaults to comparing pointers
 {
-  if(list == NULL)
+  if(!list)
     return;
 
-  list_node_t * current = list->first;
-  list_node_t * tmp;
+  list_node_t * current, * tmp, * prev;
+  prev = NULL;
 
   if(!list_compare)
     list_compare = list_compare_default;
 
+  current = list->first;
   while(current) {
     if(list_compare(current->data, data) == 0) {
       tmp = current;
-      if(delete_all) {
-        current = current->next;
+
+      if(delete_func)
+        delete_func(current->data);
+
+      if(prev) {
+        prev->next = current->next;
       } else {
-        current = NULL;
+        /* at beginning */
+        list->first = current->next;
       }
-      if(delete_func) {
-        delete_func(tmp->data);
-      }
+
+      current = current->next;
+
       free(tmp);
       list->size--;
+
+      if(!delete_all)
+        break;
     }
+    prev = current;
   }
 }
 
@@ -197,9 +207,22 @@ list_t * list_map(const list_t * list, void * (* func)(const void * a))
 void * list_find_first(const list_t * list, bool (* compare_func)(const void * a))
 {
   list_node_t * current = list->first;
+  if(list->size == 0)
+    return NULL;
+
   for(; current; current = current->next) {
     if(compare_func(current->data))
       return current->data;
   }
   return NULL;
+}
+
+bool list_contains(const list_t * list, void * elem)
+{
+  list_node_t * current = list->first;
+  for(; current; current = current->next) {
+    if(current->data == elem)
+      return true;
+  }
+  return false;
 }

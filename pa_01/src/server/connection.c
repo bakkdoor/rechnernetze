@@ -330,8 +330,13 @@ void server_connection_handle_message(server_connection_t * server_conn, client_
       error(false, "Could not send message to non-existant room: %s", msg->cl_msg.room_name);
       break;
     }
-    server_connection_room_broadcast(server_conn, reply, room);
-    info("Broadcasting to room %s : %s", msg->cl_msg.room_name, msg->cl_msg.message);
+
+    if(chat_room_has_client(room, client)) {
+      server_connection_room_broadcast(server_conn, reply, room);
+      info("Broadcasting to room %s : %s", msg->cl_msg.room_name, msg->cl_msg.message);
+    } else {
+      warn("User %s tried to send message to room: %s without being in it", client->name, room->name);
+    }
     break;
 
   case CL_DISC_REQ:

@@ -105,4 +105,6 @@ list_t * list_map(const list_t * list, void * (* func)(const void * a));
  **/
 void * list_find_first(const list_t * list, bool (* compare_func)(const void * a));
 
+bool list_contains(const list_t * list, void * elem);
+
 #endif /* _LIST_H_ */
