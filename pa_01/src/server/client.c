@@ -3,6 +3,7 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <string.h>
+#include <assert.h>
 
 #include "client.h"
 #include "chat_room.h"
@@ -63,8 +64,7 @@ client_t * client_new(char * name, struct sockaddr_in * client_addr) {
 void client_delete(void * _client) {
   client_t * client = _client;
 
-  if(!client)
-    return;
+  assert(client);
 
   free(client->name);
   list_delete(client->rooms, NULL);
@@ -102,12 +102,16 @@ client_message_t * client_read_message(const client_t * client)
 
 void client_join_room(client_t * client, chat_room_t * room)
 {
+  assert(client && room);
+
   list_insert(client->rooms, room);
   chat_room_add_client(room, client);
 }
 
 void client_leave_room(client_t * client, chat_room_t * room)
 {
+  assert(client && room);
+
   chat_room_remove_client(room, client);
   list_remove(client->rooms, room, true, NULL, NULL);
 }
