@@ -8,12 +8,11 @@
 #include <string.h>
 #include <fcntl.h>
 
+#include "../common/list.h"
+#include "../common/output.h"
 #include "connection.h"
 #include "client.h"
-#include "../common/list.h"
-#include "../common/chat_room.h"
-#include "../common/output.h"
-#include "../common/chat_user.h"
+#include "chat_room.h"
 
 #define DEFAULT_TIMEOUT_USEC 1000
 
@@ -118,7 +117,6 @@ void server_connection_handle_new_clients(server_connection_t * server_conn)
   int bytes_read;
   client_message_t * message = NULL;
   client_t * client;
-  chat_user_t * chat_user;
   int slen = sizeof(struct sockaddr_in);
   int tmp_sock;
   struct sockaddr_in * client_addr = calloc(1, sizeof(struct sockaddr_in));
@@ -148,8 +146,7 @@ void server_connection_handle_new_clients(server_connection_t * server_conn)
      create new user & client and add them to server_conn's clients list
   */
 
-  chat_user = chat_user_new(message->cl_con_req.name);
-  client = client_new(chat_user, client_addr);
+  client = client_new(message->cl_con_req.name, client_addr);
 
   if(client->sock > server_conn->clients_nfds)
     server_conn->clients_nfds = client->sock;
@@ -160,7 +157,7 @@ void server_connection_handle_new_clients(server_connection_t * server_conn)
     return;
   }
 
-  info("New user connected with name: %s", chat_user->name);
+  info("New user connected with name: %s", client->name);
 
   /* send reply to client with new port number */
 
@@ -169,7 +166,7 @@ void server_connection_handle_new_clients(server_connection_t * server_conn)
 
 
   if(server_connection_has_client(server_conn, client)) {
-    info("User tried to connect with already taken name: %s", chat_user->name);
+    info("User tried to connect with already taken name: %s", client->name);
     reply.sv_con_rep.state = CON_REP_BAD_USERNAME;
     reply.sv_con_rep.comm_port = 0;
   } else {
@@ -271,18 +268,18 @@ void server_connection_handle_message(server_connection_t * server_conn, client_
       reply->sv_room_msg.room = calloc(reply->sv_room_msg.room_length, sizeof(char));
       memcpy(reply->sv_room_msg.room, room->name, reply->sv_room_msg.room_length);
 
-      reply->sv_room_msg.user_length = strlen(client->chat_user->name);
+      reply->sv_room_msg.user_length = strlen(client->name);
       reply->sv_room_msg.user = calloc(reply->sv_room_msg.user_length, sizeof(char));
-      memcpy(reply->sv_room_msg.user, client->chat_user->name, reply->sv_room_msg.user_length);
+      memcpy(reply->sv_room_msg.user, client->name, reply->sv_room_msg.user_length);
 
-      server_connection_room_broadcast(server_conn, reply, room->name);
+      server_connection_room_broadcast(server_conn, reply, room);
     }
 
     /* check for action and remove client from chat_room if action == CL_ROOM_MSG_ACTION_LEAVE */
 
     switch(msg->cl_room_msg.action) {
     case CL_ROOM_MSG_ACTION_JOIN:
-      info("User %s joining room %s", client->chat_user->name, _room_name);
+      info("User %s joining room %s", client->name, _room_name);
 
       if(!room) {
         info("Creating new room: %s", msg->cl_room_msg.room_name);
@@ -300,8 +297,8 @@ void server_connection_handle_message(server_connection_t * server_conn, client_
       break;
 
     case CL_ROOM_MSG_ACTION_LEAVE:
-      info("User %s leaving room %s", client->chat_user->name, _room_name);
-      if (room && chat_room_has_user(room, client->chat_user)) {
+      info("User %s leaving room %s", client->name, _room_name);
+      if (room && chat_room_has_client(room, client)) {
         client_leave_room((client_t *)client, room);
       }
       break;
@@ -320,15 +317,20 @@ void server_connection_handle_message(server_connection_t * server_conn, client_
     reply->sv_amsg.room = calloc(reply->sv_amsg.room_length, sizeof(char));
     memcpy(reply->sv_amsg.room, msg->cl_msg.room_name, reply->sv_amsg.room_length);
 
-    reply->sv_amsg.user_length = strlen(client->chat_user->name);
+    reply->sv_amsg.user_length = strlen(client->name);
     reply->sv_amsg.user = calloc(reply->sv_amsg.user_length, sizeof(char));
-    memcpy(reply->sv_amsg.user, client->chat_user->name, reply->sv_amsg.user_length);
+    memcpy(reply->sv_amsg.user, client->name, reply->sv_amsg.user_length);
 
     reply->sv_amsg.msg_length = msg->cl_msg.msg_length;
     reply->sv_amsg.msg = calloc(reply->sv_amsg.msg_length, sizeof(char));
     memcpy(reply->sv_amsg.msg, msg->cl_msg.message, reply->sv_amsg.msg_length);
 
-    server_connection_room_broadcast(server_conn, reply, msg->cl_msg.room_name);
+    room = server_connection_find_room(server_conn, msg->cl_msg.room_name);
+    if(!room) {
+      error(false, "Could not send message to non-existant room: %s", msg->cl_msg.room_name);
+      break;
+    }
+    server_connection_room_broadcast(server_conn, reply, room);
     info("Broadcasting to room %s : %s", msg->cl_msg.room_name, msg->cl_msg.message);
     break;
 
@@ -342,17 +344,17 @@ void server_connection_handle_message(server_connection_t * server_conn, client_
     reply = calloc(1, sizeof(server_message_t));
     reply->type = SV_DISC_AMSG;
 
-    reply->sv_disc_amsg.user_length = strlen(client->chat_user->name);
+    reply->sv_disc_amsg.user_length = strlen(client->name);
     reply->sv_disc_amsg.user = calloc(reply->sv_disc_amsg.user_length, sizeof(char));
-    memcpy(reply->sv_disc_amsg.user, client->chat_user->name, reply->sv_disc_amsg.user_length);
+    memcpy(reply->sv_disc_amsg.user, client->name, reply->sv_disc_amsg.user_length);
 
-    current = client->chat_user->rooms->first;
+    current = client->rooms->first;
 
     /* remove user from rooms */
     for(; current; current = current->next) {
       room = current->data;
-      server_connection_room_broadcast(server_conn, reply, room->name);
-      list_remove(room->users, (chat_user_t *)client->chat_user, true, NULL, NULL); /* remove from room */
+      server_connection_room_broadcast(server_conn, reply, room);
+      list_remove(room->clients, (client_t *)client, true, NULL, NULL); /* remove from room */
     }
 
     /* remove user from list of clients in server_conn */
@@ -412,31 +414,31 @@ void server_connection_handle_incoming(server_connection_t * server_conn)
   server_connection_handle_client_messages(server_conn);
 }
 
-void server_connection_room_broadcast(server_connection_t * server_conn, server_message_t * msg, char * room_name)
+void server_connection_room_broadcast(server_connection_t * server_conn, server_message_t * msg, chat_room_t * room)
 {
   client_t * client;
   list_node_t * node = server_conn->clients->first;
   for(; node; node = node->next) {
     client = node->data;
-    if(chat_user_in_room(client->chat_user, room_name)) {
+    if(chat_room_has_client(room, client)) {
       client_send_message(client, msg);
     } else {
-      info("user: %s tried to broadcast to room although he is not in room: %s", client->chat_user->name, room_name);
+      info("user: %s tried to broadcast to room although he is not in room: %s", client->name, room->name);
     }
   }
 }
 
 static char * _username;
-bool client_with_correct_name(const void * _client)
+bool _serv_conn_client_with_correct_name(const void * _client)
 {
   const client_t * client = _client;
-  return strcmp(_username, client->chat_user->name) == 0;
+  return strcmp(_username, client->name) == 0;
 }
 
 bool server_connection_has_client(server_connection_t * server_conn, client_t * client)
 {
-  _username = client->chat_user->name;
-  if(list_find_first(server_conn->clients, client_with_correct_name))
+  _username = client->name;
+  if(list_find_first(server_conn->clients, _serv_conn_client_with_correct_name))
     return true;
   return false;
 }

@@ -12,7 +12,6 @@
 
 #include "connection.h"
 #include "../common/output.h"
-#include "../common/chat_user.h"
 #include "../common/unp_readline.h"
 
 #define DEBUG
@@ -93,7 +92,7 @@ client_connection_t * connection_setup(const char * server_hostname, const char 
   cli_conn->sock = socket(cli_conn->server_addr_info->ai_family,
                           cli_conn->server_addr_info->ai_socktype,
                           cli_conn->server_addr_info->ai_protocol);
-  
+
   if (cli_conn->sock < 0) {
     error(true, "Could not create socket!");
   }
@@ -115,10 +114,10 @@ client_connection_t * connection_setup(const char * server_hostname, const char 
           cli_conn->server_addr_info->ai_addr = (struct sockaddr *)addr;
 
           info("Verbindung akzeptiert. Der Port für die weitere Kommunikation lautet %u.", ntohs(addr->sin_port));
-          
+
           client_message_delete(message);
           server_message_delete(response);
-          
+
           return cli_conn;
         } else {
           error(true, "Verbindung fehlgeschlagen. Benutzername %s bereits vergeben.", username);
@@ -126,10 +125,10 @@ client_connection_t * connection_setup(const char * server_hostname, const char 
       }
     }
   }
-  
+
   client_message_delete(message);
   if (response) server_message_delete(response);
-  
+
   error(true, "Verbindung fehlgeschlagen. Wartezeit verstrichen.");
   return NULL;  // error terminate
 }
@@ -137,12 +136,12 @@ client_connection_t * connection_setup(const char * server_hostname, const char 
 void connection_close(client_connection_t * cli_conn) {
   int count;
   client_message_t * msg = parse_client_message(DISCONNECT_CMD);
-  
+
   for (count = 3; count > 0; count --) {
     connection_send_client_message(cli_conn, msg);
     connection_handle_socks(cli_conn, DEFAULT_TIMEOUT_SEC);
   }
-  
+
   connection_delete(cli_conn);
   error(true, "Verbindung nicht erfolgreich beendet. Wartezeit verstrichen.");
 }
@@ -176,7 +175,7 @@ server_message_t * connection_recv_client_message(client_connection_t * cli_conn
 #ifdef DEBUG
     perror("recvfrom()");
 #endif
-    
+
     return NULL;
   }
   return server_message_read(buff);
@@ -204,7 +203,7 @@ void connection_handle_socks(client_connection_t * cli_conn, int timeout_sec) {
   client_message_t * cli_msg;
   char buff[MAX_CLIENT_MSG_SIZE];
   int size;
-  
+
   memset(buff, 0, MAX_CLIENT_MSG_SIZE);
 
   if (!cli_conn->sock) return;
@@ -217,12 +216,12 @@ void connection_handle_socks(client_connection_t * cli_conn, int timeout_sec) {
   FD_SET(STDIN_FILENO, &read_fds);
 
   if (select(cli_conn->sock + 1, &read_fds, NULL, NULL, &timeout) > 0) {
-    
+
     if (FD_ISSET(cli_conn->sock, &read_fds)) {
       srv_msg = connection_recv_client_message(cli_conn);
       handle_server_message(srv_msg);
       server_message_delete(srv_msg);
-    } 
+    }
     if (FD_ISSET(STDIN_FILENO, &read_fds)) {
       readline(STDIN_FILENO, buff, MAX_CLIENT_MSG_SIZE);
       cli_msg = parse_client_message(buff);
@@ -241,7 +240,7 @@ void connection_handle_socks(client_connection_t * cli_conn, int timeout_sec) {
 void handle_server_message(server_message_t * msg) {
   char format[MAX_SERVER_MSG_SIZE];
   memset(format, 0, MAX_SERVER_MSG_SIZE);
-  
+
   switch(msg->type) {
     case SV_ROOM_MSG:
       switch(msg->sv_room_msg.action) {
@@ -253,7 +252,7 @@ void handle_server_message(server_message_t * msg) {
           sprintf(format, "%%%us hat den Raum %%%us verlassen.", msg->sv_room_msg.user_length, msg->sv_room_msg.room_length);
           info(format, msg->sv_room_msg.user, msg->sv_room_msg.room);
           break;
-        default: 
+        default:
           assert(0);
       }
       break;

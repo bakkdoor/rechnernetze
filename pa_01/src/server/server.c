@@ -4,8 +4,7 @@
 
 #include "../common/output.h"
 #include "../common/list.h"
-#include "../common/chat_room.h"
-#include "../common/chat_user.h"
+#include "chat_room.h"
 
 #include "connection.h"
 
@@ -47,7 +46,7 @@ int main(int argc, char ** argv)
     error(true, "Could not create server connection.");
     return 1;
   }
-  
+
   Running = true;
 
   while(Running) {

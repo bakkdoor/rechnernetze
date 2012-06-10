@@ -5,18 +5,13 @@
 #include <string.h>
 
 #include "client.h"
-#include "../common/chat_user.h"
+#include "chat_room.h"
 #include "../common/output.h"
 
-client_t * client_new(chat_user_t * chat_user, struct sockaddr_in * client_addr) {
+client_t * client_new(char * name, struct sockaddr_in * client_addr) {
   client_t * client;
   unsigned int slen = sizeof(struct sockaddr_in);
   struct sockaddr_in addr;
-
-  if(!chat_user) {
-    error(false, "No chat user given");
-    return NULL;
-  }
 
   client = calloc(1, sizeof(client_t));
   if (!client) {
@@ -33,13 +28,13 @@ client_t * client_new(chat_user_t * chat_user, struct sockaddr_in * client_addr)
   addr.sin_addr.s_addr = htonl(INADDR_ANY); /* client_addr->sin_addr.s_addr; */
   client->sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if (client->sock < 0) {
-    error(false, "Could not setup user-specific socket for user %s", chat_user->name);
+    error(false, "Could not setup user-specific socket for user %s", name);
     free(client);
     return NULL;
   }
 
   if (bind(client->sock, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) < 0) {
-    error(false, "Could not bind on user-specific port for user %s", chat_user->name);
+    error(false, "Could not bind on user-specific port for user %s", name);
     free(client);
     return NULL;
   }
@@ -51,12 +46,15 @@ client_t * client_new(chat_user_t * chat_user, struct sockaddr_in * client_addr)
     return NULL;
   } else {
     client->port = ntohs(addr.sin_port);
-    info("User-specific port %d opened for user %s", client->port, chat_user->name);
+    info("User-specific port %d opened for user %s", client->port, name);
   }
 
   fcntl(client->sock, F_SETFL, O_NONBLOCK);
 
-  client->chat_user = chat_user;
+  client->name = calloc(strlen(name) + 1, sizeof(char));
+  strcpy(client->name, name);
+
+  client->rooms = list_new();
 
   return client;
 }
@@ -68,7 +66,8 @@ void client_delete(void * _client) {
   if(!client)
     return;
 
-  chat_user_delete(client->chat_user);
+  free(client->name);
+  list_delete(client->rooms, NULL);
   free(client->addr);
   free(client);
 }
@@ -103,12 +102,12 @@ client_message_t * client_read_message(const client_t * client)
 
 void client_join_room(client_t * client, chat_room_t * room)
 {
-  list_insert(client->chat_user->rooms, room);
-  chat_room_add_user(room, client->chat_user);
+  list_insert(client->rooms, room);
+  chat_room_add_client(room, client);
 }
 
 void client_leave_room(client_t * client, chat_room_t * room)
 {
-  chat_room_remove_user(room, client->chat_user);
-  list_remove(client->chat_user->rooms, room, true, NULL, NULL);
+  chat_room_remove_client(room, client);
+  list_remove(client->rooms, room, true, NULL, NULL);
 }

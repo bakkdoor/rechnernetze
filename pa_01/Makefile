@@ -5,8 +5,8 @@ CPPFLAGS				= -Wall -g -c -I src/
 CLIENT					= bin/client
 SERVER					= bin/server
 CLIENT_SRC			= src/client/client.o src/client/connection.o
-SERVER_SRC			= src/server/server.o src/server/connection.o src/server/client.o
-COMMON					= src/common/unp_readline.o src/common/list.o src/common/chat_user.o src/common/chat_room.o src/common/messages.o src/common/output.o
+SERVER_SRC			= src/server/server.o src/server/connection.o src/server/client.o src/server/chat_room.o
+COMMON					= src/common/unp_readline.o src/common/list.o src/common/messages.o src/common/output.o
 
 PORT	= 1234
 ADDR	= localhost
@@ -32,7 +32,7 @@ clean:
 
 run_client: $(CLIENT)
 	./$(CLIENT) $(ADDR) $(PORT) $(NAME)
-	
+
 run_client2: $(CLIENT)
 	./$(CLIENT) $(ADDR) $(PORT) $(NAME)2
 
