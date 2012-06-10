@@ -39,39 +39,38 @@ int chat_room_user_count(const chat_room_t * room)
 
 void chat_room_add_user(chat_room_t * room, chat_user_t * user)
 {
-  if(!room)
-    return;
-  if(!user)
+  if(!room || !user)
     return;
 
   list_insert(room->users, user);
 }
 
-void chat_room_remove_user(chat_room_t * room, chat_user_t * user) 
+void chat_room_remove_user(chat_room_t * room, chat_user_t * user)
 {
-  if (!room)
+  if (!room || !user)
     return;
-  if (!user)
-    return;
-  
-  list_remove(room->users, user, true, NULL, NULL);
-}
 
-void chat_room_send_message(const chat_user_t * user, const char * message)
-{
-  /* TODO */
+  list_remove(room->users, user, true, NULL, NULL);
 }
 
 static char * _username = "";
 bool user_with_correct_name(const void * _user)
 {
   const chat_user_t * user = _user;
+
+  if(!user)
+    return false;
+
   return strcmp(user->name, _username) == 0;
 }
 
 bool chat_room_has_user(const chat_room_t * room, const chat_user_t * user)
 {
+  if(!room || !user)
+    return false;
+
   _username = user->name;
+
   if(list_find_first(room->users, user_with_correct_name))
     return true;
   return false;
