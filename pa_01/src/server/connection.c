@@ -198,10 +198,10 @@ void server_connection_handle_new_clients(server_connection_t * server_conn)
 
   client_message_delete(message);
   free(buf);
+  free(client_addr);
 
   if(reply.sv_con_rep.state == CON_REP_BAD_USERNAME) {
     close(client->sock);
-    free(client_addr);
     client_delete(client);
   }
 }
