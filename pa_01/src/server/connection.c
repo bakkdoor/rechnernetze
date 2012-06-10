@@ -226,6 +226,18 @@ bool _room_with_name(const void * _room)
   return strcmp(room->name, _room_name) == 0;
 }
 
+void server_connection_add_room(server_connection_t * server_conn, chat_room_t * room)
+{
+  list_insert(server_conn->rooms, room);
+}
+
+chat_room_t * server_connection_find_room(server_connection_t * server_conn, char * room_name)
+{
+  _room_name = room_name;
+  return list_find_first(server_conn->rooms, _room_with_name);
+}
+
+
 void server_connection_handle_message(server_connection_t * server_conn, client_with_message_t * cwm)
 {
  /*
@@ -249,18 +261,31 @@ void server_connection_handle_message(server_connection_t * server_conn, client_
 
   switch(msg->type) {
   case CL_ROOM_MSG:
-    _room_name = msg->cl_room_msg.room_name;
-    info("User %s joining room %s", client->chat_user->name, _room_name);
-    room = list_find_first(server_conn->rooms, _room_with_name);
-    
-    if (msg->cl_room_msg.action == CL_ROOM_MSG_ACTION_JOIN) {
-      // message is join
-      
-      if(room) {
-        list_insert(client->chat_user->rooms, room);
-        list_insert(server_conn->rooms, room);
-      } else {
-        info("room not found: %s", _room_name);
+    room = server_connection_find_room(server_conn, msg->cl_room_msg.room_name);
+
+    if(room) {
+      reply->type = SV_ROOM_MSG;
+      reply->sv_room_msg.action = msg->cl_room_msg.action;
+
+      reply->sv_room_msg.room_length = strlen(room->name);
+      reply->sv_room_msg.room = calloc(reply->sv_room_msg.room_length, sizeof(char));
+      memcpy(reply->sv_room_msg.room, room->name, reply->sv_room_msg.room_length);
+
+      reply->sv_room_msg.user_length = strlen(client->chat_user->name);
+      reply->sv_room_msg.user = calloc(reply->sv_room_msg.user_length, sizeof(char));
+      memcpy(reply->sv_room_msg.user, client->chat_user->name, reply->sv_room_msg.user_length);
+
+      server_connection_room_broadcast(server_conn, reply, room->name);
+    }
+
+    /* check for action and remove client from chat_room if action == CL_ROOM_MSG_ACTION_LEAVE */
+
+    switch(msg->cl_room_msg.action) {
+    case CL_ROOM_MSG_ACTION_JOIN:
+      info("User %s joining room %s", client->chat_user->name, _room_name);
+
+      if(!room) {
+        info("Creating new room: %s", msg->cl_room_msg.room_name);
         room = chat_room_new(msg->cl_room_msg.room_name);
 
         if(!room) {
@@ -268,48 +293,24 @@ void server_connection_handle_message(server_connection_t * server_conn, client_
           return;
         }
 
-        chat_room_add_user(room, client->chat_user);
-        list_insert(server_conn->rooms, room);
-        list_insert(client->chat_user->rooms, room);
+        server_connection_add_room(server_conn, room);
       }
-    
-    } else if (msg->cl_room_msg.action == CL_ROOM_MSG_ACTION_LEAVE) {
-      // message is leave
-      
+
+      chat_room_add_user(room, client->chat_user);
+      client_join_room(client, room);
+      break;
+
+    case CL_ROOM_MSG_ACTION_LEAVE:
+      info("User %s leaving room %s", client->chat_user->name, _room_name);
       if (room && chat_room_has_user(room, client->chat_user)) {
-        // TODO: habe ich die chat_room_remove_user rechtig implementiert? 
-/*
         chat_room_remove_user(room, client->chat_user);
-        list_remove(client->chat_user->rooms, room, true, NULL, NULL);
-*/
-        
-        //TODO noch was vergessen?
       }
-    
-    } else {
-      // transmission error?
-      return;
+      break;
+
+    default:
+      break;
     }
 
-    reply->type = SV_ROOM_MSG;
-    reply->sv_room_msg.action = msg->cl_room_msg.action;
-
-    /* TODO: check for action and remove client from chat_room if action == CL_ROOM_MSG_ACTION_LEAVE */
-
-    reply->sv_room_msg.room_length = strlen(room->name);
-    reply->sv_room_msg.room = calloc(reply->sv_room_msg.room_length, sizeof(char));
-    memcpy(reply->sv_room_msg.room, room->name, reply->sv_room_msg.room_length);
-
-    reply->sv_room_msg.user_length = strlen(client->chat_user->name);
-    reply->sv_room_msg.user = calloc(reply->sv_room_msg.user_length, sizeof(char));
-    memcpy(reply->sv_room_msg.user, client->chat_user->name, reply->sv_room_msg.user_length);
-
-    if (reply->sv_room_msg.action == SV_ROOM_MSG_ACTION_JOIN) {
-      info("%s joined %s", reply->sv_room_msg.user, reply->sv_room_msg.room);
-    } else {
-      info("%s leave %s", reply->sv_room_msg.user, reply->sv_room_msg.room);
-    }
-    server_connection_room_broadcast(server_conn, reply, room->name);
     break;
 
   case CL_MSG:
