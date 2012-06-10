@@ -49,9 +49,27 @@ typedef struct client_message {
   };
 } client_message_t;
 
+/**
+ * @param client_message Client message to be deleted.
+ **/
 void client_message_delete(client_message_t * client_message);
+
+/**
+ * @param client_message Client message to be deleted.
+ **/
 void _client_message_delete(void * client_message);
+
+/**
+ * @param buf Buffer to read a client message from.
+ * @return Client message read from buf or NULL (on failure).
+ **/
 client_message_t * client_message_read(char * buf);
+
+/**
+ * @param client_message Client message to be written to a buffer.
+ * @param buf Buffer to write client_message to (in binary protocol format).
+ * @return Number of bytes written into buf.
+ **/
 size_t client_message_write(client_message_t * client_message, char * buf);
 
 
@@ -123,9 +141,27 @@ typedef struct server_message {
   };
 } server_message_t;
 
+/**
+ * @param server_message Server message to be deleted.
+ **/
 void server_message_delete(server_message_t * server_message);
+
+/**
+ * @param server_message Server message to be deleted.
+ **/
 void _server_message_delete(void * server_message);
+
+/**
+ * @param buf Buffer to read a server message from.
+ * @return Server message read from buf or NULL (on failure).
+ **/
 server_message_t * server_message_read(char * buf);
+
+/**
+ * @param server_message Server message to be written to a buffer.
+ * @param buf Buffer to write server_message to (in binary protocol format).
+ * @return Number of bytes written into buf.
+ **/
 size_t server_message_write(server_message_t * server_message, char * buf);
 
 #endif /* _MESSAGES_H_ */
