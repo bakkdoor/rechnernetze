@@ -7,14 +7,6 @@
 #include "../common/output.h"
 #include "../common/unp_readline.h"
 
-const char * CHAT_CMD_JOIN = "/join %s";
-const char * CHAT_CMD_LEAVE = "/leave %s";
-const char * CHAT_CMD_DISCONNECT = "/disconnect";
-const char * CHAT_CMD_MSG = "%s: %s";
-
-int input_is_join(const char * input);
-int input_is_leave(const char * input);
-
 void help(char * progname) {
   puts("Usage:");
   printf("%s <server_addr> <server_port> <name>\n", progname);
