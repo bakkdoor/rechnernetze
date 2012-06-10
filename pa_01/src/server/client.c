@@ -100,3 +100,8 @@ client_message_t * client_read_message(const client_t * client)
 
   return client_message_read(buf);
 }
+
+void client_join_room(const client_t * client, const chat_room_t * room)
+{
+  list_insert(client->chat_user->rooms, (chat_room_t *)room);
+}
