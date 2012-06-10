@@ -13,8 +13,6 @@
 #include "../common/output.h"
 #include "../common/unp_readline.h"
 
-#define DEBUG
-
 #define DEFAULT_TIMEOUT_SEC 5
 
 #define JOIN_PRE_CMD "/join "
@@ -146,7 +144,6 @@ client_connection_t * connection_setup(const char * server_hostname, const char 
           info("Verbindung akzeptiert. Der Port für die weitere Kommunikation lautet %u.", ntohs(addr->sin_port));
 
           client_message_delete(message);
-          server_message_delete(response);
 
           return cli_conn;
         } else {
@@ -157,7 +154,6 @@ client_connection_t * connection_setup(const char * server_hostname, const char 
   }
 
   client_message_delete(message);
-  if (response) server_message_delete(response);
 
   error(true, "Verbindung fehlgeschlagen. Wartezeit verstrichen.");
   return NULL;  // error terminate
