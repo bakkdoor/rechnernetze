@@ -28,8 +28,9 @@ uint8_t read_byte(char * buf)
 
 char * read_string(char * buf, size_t length)
 {
-  char * tmp = calloc(length, sizeof(char));
+  char * tmp = calloc(length + 1, sizeof(char));
   memcpy(tmp, buf, length);
+  tmp[length] = '\0';
   return tmp;
 }
 
