@@ -21,10 +21,48 @@
 #define LEAVE_PRE_CMD "/leave "
 #define DISCONNECT_CMD "/disconnect"
 
+
+/**
+ * Delete connection stuct. Release allocated memory.
+ * @param cli_conn connection struct
+ */
+void connection_delete(client_connection_t * cli_conn);
+
+/**
+ * Handle given server message.
+ * @param msg server message struct
+ */
+void handle_server_message(server_message_t * msg);
+
+/**
+ * Chack if connection socket has data to recieve.
+ * @param cli_conn connection struct
+ * @param timeout_sec timeout in seconds
+ * @return > 0 if socket has incomming data, 0 else
+ */
+int connection_has_incoming_data(client_connection_t * cli_conn, int timeout_sec);
+
+/**
+ * Recieve and parse message from server.
+ * @param cli_conn connection struct
+ * @return parsed server message struct
+ */
+server_message_t * connection_recv_client_message(client_connection_t * cli_conn);
+
+/**
+ * Close connection. Send disconnect request to server and wait of reply. Close connection after server reply or three requests are send.
+ * @param cli_conn connection struct
+ */
+void connection_close(client_connection_t * cli_conn);
+
+////////////////////////////////////////////////////////////////////////////////
+
 struct client_connection {
   int sock;
   struct addrinfo * server_addr_info;
 };
+
+////////////////////////////////////////////////////////////////////////////////
 
 client_connection_t * connection_setup(const char * server_hostname, const char * server_port, const char * username) {
   int count;
@@ -191,8 +229,7 @@ void connection_handle_socks(client_connection_t * cli_conn, int timeout_sec) {
   server_message_t * srv_msg;
   client_message_t * cli_msg;
   char buff[MAX_CLIENT_MSG_SIZE];
-  int size;
-
+  
   memset(buff, 0, MAX_CLIENT_MSG_SIZE);
 
   if (!cli_conn->sock) return;
@@ -218,7 +255,7 @@ void connection_handle_socks(client_connection_t * cli_conn, int timeout_sec) {
         if (cli_msg->type == CL_DISC_REQ) {
           connection_close(cli_conn);
         } else {
-          size = connection_send_client_message(cli_conn, cli_msg);
+          connection_send_client_message(cli_conn, cli_msg);
           client_message_delete(cli_msg);
         }
       }
