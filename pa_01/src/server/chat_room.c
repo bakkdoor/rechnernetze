@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #include "chat_room.h"
 #include "client.h"
@@ -20,6 +21,8 @@ chat_room_t * chat_room_new(const char * name)
 void chat_room_delete(void * _room)
 {
   chat_room_t * room = _room;
+  assert(room);
+
   if(!room)
     return;
 
@@ -32,6 +35,8 @@ void chat_room_delete(void * _room)
 
 int chat_room_user_count(const chat_room_t * room)
 {
+  assert(room);
+
   if(!room)
     return 0;
 
@@ -40,6 +45,8 @@ int chat_room_user_count(const chat_room_t * room)
 
 void chat_room_add_client(chat_room_t * room, client_t * client)
 {
+  assert(room && client);
+
   if(!room || !client)
     return;
 
@@ -48,6 +55,8 @@ void chat_room_add_client(chat_room_t * room, client_t * client)
 
 void chat_room_remove_client(chat_room_t * room, client_t * client)
 {
+  assert(room && client);
+
   if (!room || !client)
     return;
 
@@ -58,11 +67,13 @@ static char * _username;
 bool _chat_room_client_with_correct_name(const void * _client)
 {
   const client_t * client = _client;
+  assert(client);
   return strcmp(_username, client->name) == 0;
 }
 
 bool chat_room_has_client(const chat_room_t * room, const client_t * client)
 {
+  assert(room && client);
   if(!room || !client)
     return false;
 
