@@ -44,4 +44,17 @@ vallgrind_client: $(CLIENT)
 
 vallgrind_server: $(SERVER)
 	valgrind --tool=memcheck --leak-check=yes ./$(SERVER) $(PORT)
+	
+	
+SRC_DIR="pa_01"
+TARGET_DIR="release_pa_01"
 
+release:
+	rm ../ReNe_SoSe_2012_PA1_933230_933151.tar
+	cd .. && cp -rf ${SRC_DIR} ${TARGET_DIR} && cd ${TARGET_DIR} && \
+	rm -rf `find . -name *git* ` && \
+	rm -rf `find . -name nbproject* ` && \
+	make && \
+	tar -cvf ../ReNe_SoSe_2012_PA1_933230_933151.tar . -R && \
+	cd .. && rm -rf ${TARGET_DIR}
+	
