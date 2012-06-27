@@ -43,7 +43,7 @@ run_simulation: $(SIMULATION)
 	LD_LIBRARY_PATH=$(NS3_LIB_DIR) ./$(SIMULATION)
 
 
-vallgrind: $(SIMULATION)
+valgrind: $(SIMULATION)
 	valgrind --tool=memcheck --leak-check=yes ./$(SIMULATION)
 
 plot: $(PLOT_DATA_FILE)
