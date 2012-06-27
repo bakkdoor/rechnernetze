@@ -34,10 +34,10 @@ clean:
 	rm -rf src/*.o src/*/*.o  *~  2> /dev/null
 
 run_first: $(MYFIRST)
-	LD_LIBRARY_PATH=$(NS3_LIB_DIR) && ./$(MYFIRST)
+	LD_LIBRARY_PATH=$(NS3_LIB_DIR) ./$(MYFIRST)
 
 run_simulation: $(SIMULATION)
-	LD_LIBRARY_PATH=$(NS3_LIB_DIR) && ./$(SIMULATION)
+	LD_LIBRARY_PATH=$(NS3_LIB_DIR) ./$(SIMULATION)
 
 
 vallgrind: $(SIMULATION)
