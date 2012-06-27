@@ -22,17 +22,17 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("rene-pa_02");
 
-int 
+int
 main (int argc, char *argv[])
 {  
   // create nodes
   NodeContainer serverRouterNodes;
   serverRouterNodes.Create(2);
-  
+
   NodeContainer routerClientNodes;
   routerClientNodes.Add(serverRouterNodes.Get(1));
   routerClientNodes.Create(1);
-  
+
   // create devices and set settings
   CsmaHelper deviceSettingsHelper;
   deviceSettingsHelper.SetChannelAttribute("DataRate", StringValue("2Mbps"));
@@ -42,39 +42,39 @@ main (int argc, char *argv[])
   
   deviceSettingsHelper.SetChannelAttribute("Delay", StringValue("20ms"));
   deviceSettingsHelper.SetQueue(DropTailQueue::GetTypeId().GetName());
-  
+
   NetDeviceContainer serverRouterDevices;
   serverRouterDevices = deviceSettingsHelper.Install(serverRouterNodes);
-  
+
   // on greater networks use CsmaHelper to install devices
   NetDeviceContainer routerClientDevices;
   routerClientDevices = deviceSettingsHelper.Install(routerClientNodes);
-  
+
   // create internet stack
   InternetStackHelper stack;
   stack.Install(serverRouterNodes.Get(0));
   stack.Install(routerClientNodes);
-  
+
   // assign ip adresses
   Ipv4AddressHelper adressHelper;
   adressHelper.SetBase("10.0.0.0", "255.0.0.0");
   Ipv4InterfaceContainer serverRouterInterfaces;
   serverRouterInterfaces = adressHelper.Assign(serverRouterDevices);
-  
+
   adressHelper.SetBase("192.168.178.0", "255.255.255.0");
   Ipv4InterfaceContainer routerClinetInterfaces;
   routerClinetInterfaces = adressHelper.Assign(routerClientDevices);
-  
+
   // create routing tables
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
-  
+
   // create pcap files for each device
   deviceSettingsHelper.EnablePcapAll("trace");
   
   ///////////////////////////////////////////////////////////////////////////
-  
+
   // test with ping application
-  // client ping server 5 times with one second intervall 
+  // client ping server 5 times with one second intervall
 //  LogComponentEnable ("UdpEchoClientApplication", LOG_LEVEL_INFO);
 //  LogComponentEnable ("UdpEchoServerApplication", LOG_LEVEL_INFO);
 //  
@@ -93,25 +93,25 @@ main (int argc, char *argv[])
 //  clientApps.Start (Seconds (2.0));
 //  clientApps.Stop (Seconds (10.0));
 //  
-  
+
   ////////////////////
   
   LogComponentEnable("PacketSink", LOG_LEVEL_INFO);
-  
+
   uint16_t serverPort = 8080;
   PacketSinkHelper packetSinkHelper ("ns3::TcpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), serverPort));
   ApplicationContainer sinkApps = packetSinkHelper.Install (serverRouterNodes.Get (0));
   sinkApps.Start (Seconds (1.0));
   sinkApps.Stop (Seconds (10.0));
-  
+
   LogComponentEnable("BulkSendApplication", LOG_LEVEL_LOGIC);
-  
+
   Address serverAddress (InetSocketAddress (serverRouterInterfaces.GetAddress (0), serverPort));
   BulkSendHelper packetSendHelper ("ns3::TcpSocketFactory", serverAddress);
   ApplicationContainer senderApps = packetSendHelper.Install(routerClientNodes.Get(1));
   senderApps.Start(Seconds(2.0));
   senderApps.Stop(Seconds(10.0));
-  
+
   Simulator::Run ();
   Simulator::Destroy ();
   return 0;

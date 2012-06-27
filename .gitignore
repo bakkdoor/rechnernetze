@@ -17,3 +17,6 @@
 *~
 *.kdev4
 nbproject
+
+
+*.pcap

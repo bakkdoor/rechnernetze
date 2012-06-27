@@ -24,6 +24,19 @@ MYFIFTH_SRC = src/fifth.o
 SIMULATION    = bin/simulation
 SIMULATION_SRC    = src/simulator/simulation.o
 
+PLOT_DATA_FILE = plotdata/simulation.plot
+
+GNUPLOT_SETTINGS = set autoscale xy; set offset graph 0, graph 0, graph 0.1, graph 0.1; set title 'My Plot'; set output 'plotdata/plot.ps'; set terminal postscript;
+GNUPLOT_CLIENT_SENT = using 1:2 title 'Client Sent' with linespoint
+GNUPLOT_CLIENT_RECEIVED = using 1:3 title 'Client Received' with linespoint
+GNUPLOT_SERVER_SENT = using 1:4 title 'Server Sent' with linespoint
+GNUPLOT_SERVER_RECEIVED = using 1:5 title 'Server Received' with linespoint
+
+GNUPLOT_CMD = '$(PLOT_DATA_FILE)' $(GNUPLOT_CLIENT_SENT), \
+							'$(PLOT_DATA_FILE)' $(GNUPLOT_CLIENT_RECEIVED), \
+							'$(PLOT_DATA_FILE)' $(GNUPLOT_SERVER_SENT), \
+							'$(PLOT_DATA_FILE)' $(GNUPLOT_SERVER_RECEIVED)
+
 default: $(SIMULATION)
 
 $(MYFIRST): $(MYFIRST_SRC)
@@ -51,9 +64,15 @@ run_simulation: $(SIMULATION)
 	LD_LIBRARY_PATH=$(NS3_LIB_DIR) ./$(SIMULATION)
 
 
-vallgrind: $(SIMULATION)
+valgrind: $(SIMULATION)
 	LD_LIBRARY_PATH=$(NS3_LIB_DIR) valgrind --tool=memcheck --leak-check=yes ./$(SIMULATION)
 
+prepare_plot: $(SIMULATION)
+	mkdir -p plotdata
+	./prepare_plot.rb simulation
+
+plot: prepare_plot
+	gnuplot -e "$(GNUPLOT_SETTINGS); plot $(GNUPLOT_CMD)"
 
 
 #SRC_DIR="pa_01"
