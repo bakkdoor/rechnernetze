@@ -15,8 +15,6 @@ NS3_LIBS = -lns3.14.1-core-debug -lns3.14.1-network-debug -lns3.14.1-internet-de
 					 -lns3.14.1-point-to-point-debug -lns3.14.1-applications-debug -lns3.14.1-bridge-debug \
 					 -lns3.14.1-mpi-debug -lns3.14.1-stats-debug -lns3.14.1-csma-debug
 
-TCP_SEND_APP_SRC = src/simulator/tcpsendapplication.o
-
 MYFIRST	   = bin/first
 MYFIRST_SRC = src/first.o
 
