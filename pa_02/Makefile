@@ -19,7 +19,10 @@ MYFIRST_SRC = src/first.o
 SIMULATION    = bin/simulation
 SIMULATION_SRC    = src/simulator/simulation.o
 
+PLOT_DATA_FILE = plotdata/simulation.plot
+
 default: $(SIMULATION)
+	mkdir -p plotdata
 
 $(MYFIRST): $(MYFIRST_SRC)
 	$(CPP) -o $@  $(MYFIRST_SRC) -L$(NS3_LIB_DIR) $(NS3_LIBS)
@@ -42,6 +45,9 @@ run_simulation: $(SIMULATION)
 
 vallgrind: $(SIMULATION)
 	valgrind --tool=memcheck --leak-check=yes ./$(SIMULATION)
+
+plot: $(PLOT_DATA_FILE)
+	gnuplot -e "set autoscale xy; set offset graph 0, graph 0, graph 0.1, graph 0.1; set title 'My Plot'; set output 'plotdata/plot.ps'; set terminal postscript; plot '$(PLOT_DATA_FILE)' with linespoints"
 
 
 
