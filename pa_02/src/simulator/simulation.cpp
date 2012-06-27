@@ -1,14 +1,14 @@
 #include <ns3/drop-tail-queue.h>
 #include <ns3/ipv4-address-helper.h>
 #include <ns3/ipv4-interface-container.h>
-
-#include "ns3/core-module.h"
-#include "ns3/network-module.h"
-#include "ns3/csma-module.h"
-#include "ns3/internet-module.h"
-#include "ns3/point-to-point-module.h"
-#include "ns3/applications-module.h"
-#include "ns3/ipv4-global-routing-helper.h"
+#include <ns3/core-module.h>
+#include <ns3/network-module.h>
+#include <ns3/csma-module.h>
+#include <ns3/internet-module.h>
+#include <ns3/point-to-point-module.h>
+#include <ns3/applications-module.h>
+#include <ns3/ipv4-global-routing-helper.h>
+#include <ns3.14.1/ns3/application-container.h>
 
 
 // Networg Topology
@@ -71,6 +71,17 @@ main (int argc, char *argv[])
   // create pcap files for each device
   deviceSettingsHelper.EnablePcapAll("trace");
   
+  // error model
+  Ptr<ReceiveListErrorModel> errorModel = CreateObject<ReceiveListErrorModel>();
+  std::list<uint32_t> lostPackets = errorModel->GetList();
+  // select packets to be loose
+  lostPackets.push_back(11);
+  lostPackets.push_back(16);
+  lostPackets.push_back(22);
+  errorModel->SetList(lostPackets);
+  // set receive error model on server interface
+  serverRouterDevices.Get(0)->SetAttribute("ReceiveErrorModel", PointerValue(errorModel));
+    
   ///////////////////////////////////////////////////////////////////////////
 
   // test with ping application
@@ -92,24 +103,24 @@ main (int argc, char *argv[])
 //  ApplicationContainer clientApps = echoClient.Install (routerClientNodes.Get (1));
 //  clientApps.Start (Seconds (2.0));
 //  clientApps.Stop (Seconds (10.0));
-//  
-
+  
   ////////////////////
   
   LogComponentEnable("PacketSink", LOG_LEVEL_INFO);
 
   uint16_t serverPort = 8080;
-  PacketSinkHelper packetSinkHelper ("ns3::TcpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), serverPort));
+  PacketSinkHelper packetSinkHelper (TcpSocketFactory::GetTypeId().GetName(), InetSocketAddress (Ipv4Address::GetAny (), serverPort));
   ApplicationContainer sinkApps = packetSinkHelper.Install (serverRouterNodes.Get (0));
   sinkApps.Start (Seconds (1.0));
   sinkApps.Stop (Seconds (10.0));
+  
 
-  LogComponentEnable("BulkSendApplication", LOG_LEVEL_LOGIC);
+//  LogComponentEnable("BulkSendApplication", LOG_LEVEL_LOGIC);
 
   Address serverAddress (InetSocketAddress (serverRouterInterfaces.GetAddress (0), serverPort));
-  BulkSendHelper packetSendHelper ("ns3::TcpSocketFactory", serverAddress);
+  BulkSendHelper packetSendHelper (TcpSocketFactory::GetTypeId().GetName(), serverAddress);
   ApplicationContainer senderApps = packetSendHelper.Install(routerClientNodes.Get(1));
-  senderApps.Start(Seconds(2.0));
+  senderApps.Start(Seconds(5.0));
   senderApps.Stop(Seconds(10.0));
 
   Simulator::Run ();
