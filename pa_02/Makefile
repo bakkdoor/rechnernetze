@@ -11,7 +11,9 @@ NS3_LIB_DIR = /usr/local/lib/
 CPP        = g++
 CPPFLAGS   = -Wall -g -c -I src/ -I $(NS3_INC_DIR)
 
-NS3_LIBS = -lns3.14.1-core-debug -lns3.14.1-network-debug -lns3.14.1-internet-debug -lns3.14.1-point-to-point-debug -lns3.14.1-applications-debug -lns3.14.1-bridge-debug -lns3.14.1-mpi-debug -lns3.14.1-stats-debug -lns3.14.1-csma-debug
+NS3_LIBS = -lns3.14.1-core-debug -lns3.14.1-network-debug -lns3.14.1-internet-debug \
+					 -lns3.14.1-point-to-point-debug -lns3.14.1-applications-debug -lns3.14.1-bridge-debug \
+					 -lns3.14.1-mpi-debug -lns3.14.1-stats-debug -lns3.14.1-csma-debug
 
 MYFIRST	   = bin/first
 MYFIRST_SRC = src/first.o
