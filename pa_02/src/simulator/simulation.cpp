@@ -25,6 +25,11 @@ NS_LOG_COMPONENT_DEFINE ("rene-pa_02");
 int
 main (int argc, char *argv[])
 {  
+  
+  // Options
+  GlobalValue::Bind ("ChecksumEnabled", BooleanValue (true));
+//  Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::TcpTahoe"));
+    
   // create nodes
   NodeContainer serverRouterNodes;
   serverRouterNodes.Create(2);
@@ -34,11 +39,11 @@ main (int argc, char *argv[])
   routerClientNodes.Create(1);
 
   // create devices and set settings
-  CsmaHelper deviceSettingsHelper;
-  deviceSettingsHelper.SetChannelAttribute("DataRate", StringValue("2Mbps"));
+//  CsmaHelper deviceSettingsHelper;
+//  deviceSettingsHelper.SetChannelAttribute("DataRate", StringValue("2Mbps"));
   
-//  PointToPointHelper deviceSettingsHelper;
-//  deviceSettingsHelper.SetDeviceAttribute("DataRate", StringValue("2Mbps"));
+  PointToPointHelper deviceSettingsHelper;
+  deviceSettingsHelper.SetDeviceAttribute("DataRate", StringValue("2Mbps"));
   
   deviceSettingsHelper.SetChannelAttribute("Delay", StringValue("20ms"));
   deviceSettingsHelper.SetQueue(DropTailQueue::GetTypeId().GetName());
@@ -80,7 +85,7 @@ main (int argc, char *argv[])
   lostPackets.push_back(22);
   errorModel->SetList(lostPackets);
   // set receive error model on server interface
-  serverRouterDevices.Get(0)->SetAttribute("ReceiveErrorModel", PointerValue(errorModel));
+  serverRouterDevices.Get(1)->SetAttribute("ReceiveErrorModel", PointerValue(errorModel));
     
   ///////////////////////////////////////////////////////////////////////////
 
@@ -107,21 +112,23 @@ main (int argc, char *argv[])
   ////////////////////
   
   LogComponentEnable("PacketSink", LOG_LEVEL_INFO);
+  
+  uint16_t receivePort = 55000;
+  InetSocketAddress receiveSock(receivePort);
+  PacketSinkHelper sinkHelper(TcpSocketFactory::GetTypeId().GetName(), receiveSock);
+  ApplicationContainer sinkApps = sinkHelper.Install (routerClientNodes.Get(1));
 
-  uint16_t serverPort = 8080;
-  PacketSinkHelper packetSinkHelper (TcpSocketFactory::GetTypeId().GetName(), InetSocketAddress (Ipv4Address::GetAny (), serverPort));
-  ApplicationContainer sinkApps = packetSinkHelper.Install (serverRouterNodes.Get (0));
+  
+//  LogComponentEnable("BulkSendApplication", LOG_LEVEL_LOGIC);
+  
+  InetSocketAddress sendSock(routerClinetInterfaces.GetAddress(1), receiveSock.GetPort());
+  BulkSendHelper packetSendHelper(TcpSocketFactory::GetTypeId().GetName(), sendSock);
+  ApplicationContainer srcApps = packetSendHelper.Install(serverRouterNodes.Get(0));
+  
   sinkApps.Start (Seconds (1.0));
   sinkApps.Stop (Seconds (10.0));
-  
-
-//  LogComponentEnable("BulkSendApplication", LOG_LEVEL_LOGIC);
-
-  Address serverAddress (InetSocketAddress (serverRouterInterfaces.GetAddress (0), serverPort));
-  BulkSendHelper packetSendHelper (TcpSocketFactory::GetTypeId().GetName(), serverAddress);
-  ApplicationContainer senderApps = packetSendHelper.Install(routerClientNodes.Get(1));
-  senderApps.Start(Seconds(5.0));
-  senderApps.Stop(Seconds(10.0));
+  srcApps.Start(Seconds(2.0));
+  srcApps.Stop(Seconds(9.0));
 
   Simulator::Run ();
   Simulator::Destroy ();

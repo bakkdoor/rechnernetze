@@ -14,6 +14,16 @@ CPPFLAGS   = -Wall -g -c -I src/ -I $(NS3_INC_DIR)
 NS3_LIBS = -lns3.14.1-core-debug -lns3.14.1-network-debug -lns3.14.1-internet-debug \
 					 -lns3.14.1-point-to-point-debug -lns3.14.1-applications-debug -lns3.14.1-bridge-debug \
 					 -lns3.14.1-mpi-debug -lns3.14.1-stats-debug -lns3.14.1-csma-debug
+	
+#NS3_LIBS_ALL = -lns3.14.1-antenna-debug -lns3.14.1-aodv-debug -lns3.14.1-applications-debug \
+#  -lns3.14.1-bridge-debug -lns3.14.1-buildings-debug \
+#  -lns3.14.1-config-store-debug -lns3.14.1-core-debug -lns3.14.1-csma-debug -lns3.14.1-csma-layout-debug -lns3.14.1-dsdv-debug \
+#  -lns3.14.1-dsr-debug -lns3.14.1-emu-debug -lns3.14.1-energy-debug -lns3.14.1-flow-monitor-debug -lns3.14.1-internet-debug \
+#  -lns3.14.1-lte-debug -lns3.14.1-mesh-debug -lns3.14.1-mobility-debug -lns3.14.1-mpi-debug -lns3.14.1-netanim-debug \
+#  -lns3.14.1-network-debug -lns3.14.1-nix-vector-routing-debug -lns3.14.1-olsr-debug -lns3.14.1-point-to-point-debug \
+#  -lns3.14.1-point-to-point-layout-debug -lns3.14.1-propagation-debug -lns3.14.1-spectrum-debug -lns3.14.1-stats-debug \
+#  -lns3.14.1-tap-bridge-debug -lns3.14.1-test-debug -lns3.14.1-tools-debug -lns3.14.1-topology-read-debug \
+#  -lns3.14.1-uan-debug -lns3.14.1-virtual-net-device-debug -lns3.14.1-wifi-debug -lns3.14.1-wimax-debug
 
 MYFIRST	   = bin/first
 MYFIRST_SRC = src/first.o
