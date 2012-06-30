@@ -1,0 +1,10 @@
+# gnuplot script
+
+set terminal png
+set output "plotdata/server-tx-rx.png"
+
+set xlabel "Zeit [sec]"
+set ylabel "Paket Sequenz Nummer"
+
+plot "plotdata/server-trace-rx.data" using 1:2 title 'ACK empfangen', "plotdata/server-trace-tx.data" using 1:2 title 'Segment verschickt'
+quit

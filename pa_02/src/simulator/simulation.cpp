@@ -101,6 +101,8 @@ main (int argc, char *argv[])
   // Options
   GlobalValue::Bind ("ChecksumEnabled", BooleanValue (true));
 //  Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::TcpTahoe"));
+//  Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::TcpReno"));
+  Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::TcpNewReno"));
     
   // create nodes
   NodeContainer serverRouterNodes;
@@ -155,6 +157,7 @@ main (int argc, char *argv[])
   lostPackets.push_back(11);
   lostPackets.push_back(16);
   lostPackets.push_back(22);
+  
   errorModel->SetList(lostPackets);
   // set receive error model on server interface
   serverRouterDevices.Get(1)->SetAttribute("ReceiveErrorModel", PointerValue(errorModel));
@@ -162,10 +165,10 @@ main (int argc, char *argv[])
   Packet::EnablePrinting();
   
   AsciiTraceHelper asciiTraceHelper;
-  Ptr<OutputStreamWrapper> streamRx = asciiTraceHelper.CreateFileStream ("server-trace-rx.data");
+  Ptr<OutputStreamWrapper> streamRx = asciiTraceHelper.CreateFileStream ("plotdata/server-trace-rx.data");
 //  Config::ConnectWithoutContext("/NodeList/0/$ns3::Ipv4L3Protocol/Rx", MakeBoundCallback(&TraceTRxN, streamRx));
 //  
-  Ptr<OutputStreamWrapper> streamTx = asciiTraceHelper.CreateFileStream ("server-trace-tx.data");
+  Ptr<OutputStreamWrapper> streamTx = asciiTraceHelper.CreateFileStream ("plotdata/server-trace-tx.data");
 //  Config::ConnectWithoutContext("/NodeList/0/$ns3::Ipv4L3Protocol/Tx", MakeBoundCallback(&TraceTRxN, streamTx));
   
   serverRouterDevices.Get(0)->TraceConnectWithoutContext("MacRx", MakeBoundCallback(&TraceRx, streamRx));
