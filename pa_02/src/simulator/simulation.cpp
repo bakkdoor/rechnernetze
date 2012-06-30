@@ -98,11 +98,27 @@ void RWNDCallback(uint32_t oldRWND, uint32_t newRWND) {
 int
 main (int argc, char *argv[])
 {
+  std::string tcpVersion("NewReno");
+  
+  CommandLine cmd;
+  cmd.AddValue("tcpVersion", "TCP version (Tahoe, Reno, NewReno)", tcpVersion);
+  cmd.Parse (argc, argv);
+  
+  
   // Options
   GlobalValue::Bind ("ChecksumEnabled", BooleanValue (true));
-//  Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::TcpTahoe"));
-//  Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::TcpReno"));
-  Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::TcpNewReno"));
+  
+  if (tcpVersion.compare("Tahoe") == 0) {
+    Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::TcpTahoe"));
+  } else if (tcpVersion.compare("Reno") == 0) {
+    Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::TcpReno"));
+  } else if (tcpVersion.compare("NewReno") == 0) {
+    Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::TcpNewReno"));
+  } else {
+    std::cerr << "tcpVersion argument is not Tahoe, Reno or NewReno!" << std::endl;
+    exit(EXIT_FAILURE);
+  }
+  NS_LOG_INFO("TCP Version set to " << tcpVersion);
     
   // create nodes
   NodeContainer serverRouterNodes;
