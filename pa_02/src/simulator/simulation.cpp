@@ -62,6 +62,32 @@ void TraceRx(Ptr<OutputStreamWrapper> stream, Ptr<const Packet> packet)
   {
     *stream->GetStream() << Simulator::Now().GetSeconds() << '\t';
     *stream->GetStream() << (uint32_t)tcpHeader.GetAckNumber().GetValue();
+    
+    uint8_t flags = tcpHeader.GetFlags();
+    if (flags & tcpHeader.SYN) {
+      *stream->GetStream() << "\tSYN";
+    }
+    if (flags & tcpHeader.FIN) {
+      *stream->GetStream() << "\tFIN";
+    }
+    if (flags & tcpHeader.RST) {
+      *stream->GetStream() << "\tRST";
+    }
+    if (flags & tcpHeader.CWR) {
+      *stream->GetStream() << "\tCWR";
+    }
+    if (flags & tcpHeader.ECE) {
+      *stream->GetStream() << "\tECE";
+    }
+    if (flags & tcpHeader.PSH) {
+      *stream->GetStream() << "\tPSH";
+    }
+    if (flags & tcpHeader.URG) {
+      *stream->GetStream() << "\tURG";
+    }
+    if (flags & tcpHeader.ACK) {
+      *stream->GetStream() << "\tACK";
+    }
     *stream->GetStream() << std::endl;
   }
 }
@@ -87,6 +113,32 @@ void TraceTx(Ptr<OutputStreamWrapper> stream, Ptr<const Packet> packet)
   {
     *stream->GetStream() << Simulator::Now().GetSeconds() << '\t';
     *stream->GetStream() << (uint32_t)tcpHeader.GetSequenceNumber().GetValue();
+    
+    uint8_t flags = tcpHeader.GetFlags();
+    if (flags & tcpHeader.SYN) {
+      *stream->GetStream() << "\tSYN";
+    }
+    if (flags & tcpHeader.FIN) {
+      *stream->GetStream() << "\tFIN";
+    }
+    if (flags & tcpHeader.RST) {
+      *stream->GetStream() << "\tRST";
+    }
+    if (flags & tcpHeader.CWR) {
+      *stream->GetStream() << "\tCWR";
+    }
+    if (flags & tcpHeader.ECE) {
+      *stream->GetStream() << "\tECE";
+    }
+    if (flags & tcpHeader.PSH) {
+      *stream->GetStream() << "\tPSH";
+    }
+    if (flags & tcpHeader.URG) {
+      *stream->GetStream() << "\tURG";
+    }
+    if (flags & tcpHeader.ACK) {
+      *stream->GetStream() << "\tACK";
+    }
     *stream->GetStream() << std::endl;
   }
 }
@@ -103,7 +155,6 @@ main (int argc, char *argv[])
   CommandLine cmd;
   cmd.AddValue("tcpVersion", "TCP version (Tahoe, Reno, NewReno)", tcpVersion);
   cmd.Parse (argc, argv);
-  
   
   // Options
   GlobalValue::Bind ("ChecksumEnabled", BooleanValue (true));
@@ -182,37 +233,13 @@ main (int argc, char *argv[])
   
   AsciiTraceHelper asciiTraceHelper;
   Ptr<OutputStreamWrapper> streamRx = asciiTraceHelper.CreateFileStream ("plotdata/server-trace-rx.data");
-//  Config::ConnectWithoutContext("/NodeList/0/$ns3::Ipv4L3Protocol/Rx", MakeBoundCallback(&TraceTRxN, streamRx));
-//  
   Ptr<OutputStreamWrapper> streamTx = asciiTraceHelper.CreateFileStream ("plotdata/server-trace-tx.data");
+  
+//  Config::ConnectWithoutContext("/NodeList/0/$ns3::Ipv4L3Protocol/Rx", MakeBoundCallback(&TraceTRxN, streamRx));
 //  Config::ConnectWithoutContext("/NodeList/0/$ns3::Ipv4L3Protocol/Tx", MakeBoundCallback(&TraceTRxN, streamTx));
   
   serverRouterDevices.Get(0)->TraceConnectWithoutContext("MacRx", MakeBoundCallback(&TraceRx, streamRx));
   serverRouterDevices.Get(0)->TraceConnectWithoutContext("MacTx", MakeBoundCallback(&TraceTx, streamTx));
-  
-  ///////////////////////////////////////////////////////////////////////////
-
-  // test with ping application
-  // client ping server 5 times with one second intervall
-//  LogComponentEnable ("UdpEchoClientApplication", LOG_LEVEL_INFO);
-//  LogComponentEnable ("UdpEchoServerApplication", LOG_LEVEL_INFO);
-//  
-//  UdpEchoServerHelper echoServer (9);
-//
-//  ApplicationContainer serverApps = echoServer.Install (serverRouterNodes.Get (0));
-//  serverApps.Start (Seconds (1.0));
-//  serverApps.Stop (Seconds (10.0));
-//  
-//  UdpEchoClientHelper echoClient (serverRouterInterfaces.GetAddress (0), 9);
-//  echoClient.SetAttribute ("MaxPackets", UintegerValue (5));
-//  echoClient.SetAttribute ("Interval", TimeValue (Seconds (1.0)));
-//  echoClient.SetAttribute ("PacketSize", UintegerValue (1024));
-//  
-//  ApplicationContainer clientApps = echoClient.Install (routerClientNodes.Get (1));
-//  clientApps.Start (Seconds (2.0));
-//  clientApps.Stop (Seconds (10.0));
-  
-  ////////////////////
   
 //  LogComponentEnable("PacketSink", LOG_LEVEL_INFO);
   

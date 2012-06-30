@@ -35,17 +35,40 @@ clean:
 	rm -rf src/*.o src/*/*.o  *.pcap *~  2> /dev/null
 
 run_simulation: $(SIMULATION)
-	LD_LIBRARY_PATH=$(NS3_LIB_DIR) ./$(SIMULATION)
+	make run_simulation_newreno
+	
+run_simulation_tahoe: $(SIMULATION)
+	LD_LIBRARY_PATH=$(NS3_LIB_DIR) ./$(SIMULATION) --tcpVersion=Tahoe
+	
+run_simulation_reno: $(SIMULATION)
+	LD_LIBRARY_PATH=$(NS3_LIB_DIR) ./$(SIMULATION) --tcpVersion=Reno
+	
+run_simulation_newreno: $(SIMULATION)
+	LD_LIBRARY_PATH=$(NS3_LIB_DIR) ./$(SIMULATION) --tcpVersion=NewReno
 
 
 valgrind: $(SIMULATION)
 	LD_LIBRARY_PATH=$(NS3_LIB_DIR) valgrind --tool=memcheck --leak-check=yes ./$(SIMULATION)
 	
 plot_server_txrx: $(SIMULATION)
-	rm -f plotdata/*.png 2>/dev/null
-	make run_simulation
+	rm -rf plotdata/* 2>/dev/null
+	touch plotdata/.gitkeep
+	mkdir plotdata/Tahoe plotdata/Reno plotdata/NewReno
+	make run_simulation_tahoe
 	gnuplot < plot-tx-rx.script
 	gnuplot < plot-tx-rx-zoom.script
+	mv plotdata/*.data plotdata/Tahoe
+	mv plotdata/*.png plotdata/Tahoe
+	make run_simulation_reno
+	gnuplot < plot-tx-rx.script
+	gnuplot < plot-tx-rx-zoom.script
+	mv plotdata/*.data plotdata/Reno
+	mv plotdata/*.png plotdata/Reno
+	make run_simulation_newreno
+	gnuplot < plot-tx-rx.script
+	gnuplot < plot-tx-rx-zoom.script
+	mv plotdata/*.data plotdata/NewReno
+	mv plotdata/*.png plotdata/NewReno
 
 
 #SRC_DIR="pa_01"
