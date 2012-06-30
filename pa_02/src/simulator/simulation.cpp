@@ -8,7 +8,8 @@
 #include <ns3/point-to-point-module.h>
 #include <ns3/applications-module.h>
 #include <ns3/ipv4-global-routing-helper.h>
-#include <ns3.14.1/ns3/application-container.h>
+#include <ns3/application-container.h>
+#include <ns3/packet.h>
 
 
 // Networg Topology
@@ -22,10 +23,81 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("rene-pa_02");
 
+//void TraceTRxN(Ptr<OutputStreamWrapper> stream, Ptr<const Packet> packet, Ptr<Ipv4> ipv4, uint32_t interface) 
+//{ 
+////  *stream->GetStream() << Simulator::Now().GetSeconds() << '\t';
+////  packet->Print(*stream->GetStream());
+////  *stream->GetStream() << std::endl;
+//  
+//  Packet p(*packet);
+//  Ipv4Header iph;
+//  p.PeekHeader(iph);
+//  p.RemoveHeader(iph);
+//  
+//  TcpHeader tcpHeader;
+//  if (p.PeekHeader(tcpHeader))
+//  {
+//    *stream->GetStream() << Simulator::Now().GetSeconds() << '\t';
+////    tcpHeader.Print(*stream->GetStream());
+//    *stream->GetStream() << (uint32_t)tcpHeader.GetSequenceNumber().GetValue();
+//    *stream->GetStream() << '\t';
+//    *stream->GetStream() << (uint32_t)tcpHeader.GetAckNumber().GetValue();
+//    *stream->GetStream() << std::endl;
+//  }
+//}
+
+void TraceRx(Ptr<OutputStreamWrapper> stream, Ptr<const Packet> packet) 
+{
+//  *stream->GetStream() << Simulator::Now().GetSeconds() << '\t';
+//  packet->Print(*stream->GetStream());
+//  *stream->GetStream() << std::endl;
+  
+  Packet p(*packet);
+  Ipv4Header ipHeader;
+  p.PeekHeader(ipHeader);
+  p.RemoveHeader(ipHeader);
+  
+  TcpHeader tcpHeader;
+  if (p.PeekHeader(tcpHeader))
+  {
+    *stream->GetStream() << Simulator::Now().GetSeconds() << '\t';
+    *stream->GetStream() << (uint32_t)tcpHeader.GetAckNumber().GetValue();
+    *stream->GetStream() << std::endl;
+  }
+}
+
+void TraceTx(Ptr<OutputStreamWrapper> stream, Ptr<const Packet> packet) 
+{
+//  *stream->GetStream() << Simulator::Now().GetSeconds() << '\t';
+//  packet->Print(*stream->GetStream());
+//  *stream->GetStream() << std::endl;
+  
+  Packet p(*packet);
+  
+  PppHeader pppHeader;
+  p.PeekHeader(pppHeader);
+  p.RemoveHeader(pppHeader);
+  
+  Ipv4Header ipHeader;
+  p.PeekHeader(ipHeader);
+  p.RemoveHeader(ipHeader);
+  
+  TcpHeader tcpHeader;
+  if (p.PeekHeader(tcpHeader))
+  {
+    *stream->GetStream() << Simulator::Now().GetSeconds() << '\t';
+    *stream->GetStream() << (uint32_t)tcpHeader.GetSequenceNumber().GetValue();
+    *stream->GetStream() << std::endl;
+  }
+}
+
+void RWNDCallback(uint32_t oldRWND, uint32_t newRWND) {
+  std::cout << "old rwnd: " << oldRWND << " new rwnd: " << newRWND << std::endl;
+}
+
 int
 main (int argc, char *argv[])
-{  
-  
+{
   // Options
   GlobalValue::Bind ("ChecksumEnabled", BooleanValue (true));
 //  Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::TcpTahoe"));
@@ -86,7 +158,19 @@ main (int argc, char *argv[])
   errorModel->SetList(lostPackets);
   // set receive error model on server interface
   serverRouterDevices.Get(1)->SetAttribute("ReceiveErrorModel", PointerValue(errorModel));
-    
+  
+  Packet::EnablePrinting();
+  
+  AsciiTraceHelper asciiTraceHelper;
+  Ptr<OutputStreamWrapper> streamRx = asciiTraceHelper.CreateFileStream ("server-trace-rx.data");
+//  Config::ConnectWithoutContext("/NodeList/0/$ns3::Ipv4L3Protocol/Rx", MakeBoundCallback(&TraceTRxN, streamRx));
+//  
+  Ptr<OutputStreamWrapper> streamTx = asciiTraceHelper.CreateFileStream ("server-trace-tx.data");
+//  Config::ConnectWithoutContext("/NodeList/0/$ns3::Ipv4L3Protocol/Tx", MakeBoundCallback(&TraceTRxN, streamTx));
+  
+  serverRouterDevices.Get(0)->TraceConnectWithoutContext("MacRx", MakeBoundCallback(&TraceRx, streamRx));
+  serverRouterDevices.Get(0)->TraceConnectWithoutContext("MacTx", MakeBoundCallback(&TraceTx, streamTx));
+  
   ///////////////////////////////////////////////////////////////////////////
 
   // test with ping application
@@ -111,14 +195,13 @@ main (int argc, char *argv[])
   
   ////////////////////
   
-  LogComponentEnable("PacketSink", LOG_LEVEL_INFO);
+//  LogComponentEnable("PacketSink", LOG_LEVEL_INFO);
   
   uint16_t receivePort = 55000;
   InetSocketAddress receiveSock(receivePort);
   PacketSinkHelper sinkHelper(TcpSocketFactory::GetTypeId().GetName(), receiveSock);
   ApplicationContainer sinkApps = sinkHelper.Install (routerClientNodes.Get(1));
-
-  
+    
 //  LogComponentEnable("BulkSendApplication", LOG_LEVEL_LOGIC);
   
   InetSocketAddress sendSock(routerClinetInterfaces.GetAddress(1), receiveSock.GetPort());
