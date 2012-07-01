@@ -202,6 +202,12 @@ main (int argc, char *argv[])
   if (looseMore.compare("yes") == 0) {
     lostPackets.push_back(16);
     lostPackets.push_back(22);
+    
+//    int i;
+//    for (i = 50; i < 70; i++)
+//    {
+//      lostPackets.push_back(i);
+//    }
   }
   
   errorModel->SetList(lostPackets);
@@ -247,13 +253,6 @@ main (int argc, char *argv[])
 //  srcApps.Start(Seconds(2.0));
 //  srcApps.Stop(Seconds(9.0));
   
-  // dubug attribute values
-//  Config::SetDefault ("ns3::ConfigStore::Filename", StringValue ("output-attributes.xml"));
-//  Config::SetDefault ("ns3::ConfigStore::FileFormat", StringValue ("Xml"));
-//  Config::SetDefault ("ns3::ConfigStore::Mode", StringValue ("Save"));
-//  ConfigStore outputConfig;
-//  outputConfig.ConfigureDefaults ();
-//  outputConfig.ConfigureAttributes ();
 
   // Output config store to txt format
   Config::SetDefault ("ns3::ConfigStore::Filename", StringValue ("output-attributes.txt"));
