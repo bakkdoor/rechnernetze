@@ -14,6 +14,7 @@ SIMULATION_SRC    = src/simulator/simulation.o
 TCP_SEND_APP_SRC = src/simulator/tcpsendapplication.o
 
 default: $(SIMULATION)
+	mkdir -p plotdata
 
 $(SIMULATION): $(SIMULATION_SRC) $(TCP_SEND_APP_SRC)
 	$(CPP) -o $@  $(SIMULATION_SRC) $(TCP_SEND_APP_SRC) -L$(NS3_LIB_DIR) $(NS3_LIBS)
@@ -29,10 +30,9 @@ run_simulation: $(SIMULATION)
 
 valgrind: $(SIMULATION)
 	LD_LIBRARY_PATH=$(NS3_LIB_DIR) valgrind --tool=memcheck --leak-check=yes ./$(SIMULATION) --tcp=NewReno
-	
+
 plot_server_traces: $(SIMULATION)
 	rm -rf plotdata/* 2>/dev/null
-	touch plotdata/.gitkeep
 	mkdir plotdata/Tahoe plotdata/Reno plotdata/NewReno
 	mkdir plotdata/Tahoe/11 plotdata/Reno/11 plotdata/NewReno/11
 	mkdir plotdata/Tahoe/11-16-22 plotdata/Reno/11-16-22 plotdata/NewReno/11-16-22
