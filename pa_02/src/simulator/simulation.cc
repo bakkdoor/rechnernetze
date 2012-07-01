@@ -135,9 +135,11 @@ int
 main (int argc, char *argv[])
 {
   std::string tcpVersion("NewReno");
+  std::string looseMore("no");
   
   CommandLine cmd;
-  cmd.AddValue("tcpVersion", "TCP version (Tahoe, Reno, NewReno)", tcpVersion);
+  cmd.AddValue("tcp", "TCP version (Tahoe, Reno, NewReno)", tcpVersion);
+  cmd.AddValue("looseMorePackets", "Should packets 16 and 22 be dropped? [yes, no]", looseMore);
   cmd.Parse (argc, argv);
   
   // Options
@@ -145,7 +147,7 @@ main (int argc, char *argv[])
 //  Config::SetDefault("ns3::DropTailQueue::MaxPackets", UintegerValue(2));
   
   if (tcpVersion.compare("Tahoe") != 0 && tcpVersion.compare("Reno") != 0 && tcpVersion.compare("NewReno") != 0) {
-    std::cerr << "tcpVersion argument should be Tahoe, Reno or NewReno!" << std::endl;
+    std::cerr << "tcp argument should be Tahoe, Reno or NewReno!" << std::endl;
     exit(EXIT_FAILURE);
   }
   Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::Tcp" + tcpVersion));
@@ -194,10 +196,13 @@ main (int argc, char *argv[])
   // error model
   Ptr<ReceiveListErrorModel> errorModel = CreateObject<ReceiveListErrorModel>();
   std::list<uint32_t> lostPackets = errorModel->GetList();
+  
   // select packets to be loose
   lostPackets.push_back(11);
-  lostPackets.push_back(16);
-  lostPackets.push_back(22);
+  if (looseMore.compare("yes") == 0) {
+    lostPackets.push_back(16);
+    lostPackets.push_back(22);
+  }
   
   errorModel->SetList(lostPackets);
   // set receive error model on server interface
