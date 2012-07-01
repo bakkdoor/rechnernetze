@@ -1,0 +1,12 @@
+# gnuplot script
+
+set terminal png
+set output "plotdata/server-cw-ssth.png"
+
+set xlabel "Zeit [sec]"
+set ylabel "Anzahl Pakete"
+set yrange [0:30000]
+
+plot "plotdata/server-cw-ssth.data" using 1:2 title "Congestion Window" with line, \
+  "plotdata/server-cw-ssth.data" using 1:3 title "TCP slow start threshold" with line
+quit

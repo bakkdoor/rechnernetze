@@ -7,7 +7,7 @@ NS3_LIB_DIR = /usr/local/lib/
 
 NS3_LIBS = -lns3.14.1-core-debug -lns3.14.1-network-debug -lns3.14.1-internet-debug \
 					 -lns3.14.1-point-to-point-debug -lns3.14.1-applications-debug -lns3.14.1-bridge-debug \
-					 -lns3.14.1-mpi-debug -lns3.14.1-stats-debug -lns3.14.1-csma-debug
+					 -lns3.14.1-mpi-debug -lns3.14.1-stats-debug -lns3.14.1-csma-debug -lns3.14.1-config-store-debug
 	
 #NS3_LIBS_ALL = -lns3.14.1-antenna-debug -lns3.14.1-aodv-debug -lns3.14.1-applications-debug \
 #  -lns3.14.1-bridge-debug -lns3.14.1-buildings-debug \
@@ -22,17 +22,18 @@ NS3_LIBS = -lns3.14.1-core-debug -lns3.14.1-network-debug -lns3.14.1-internet-de
 SIMULATION    = bin/simulation
 SIMULATION_SRC    = src/simulator/simulation.o
 
+TCP_SEND_APP_SRC = src/simulator/tcpsendapplication.o
 
 default: $(SIMULATION)
 
-$(SIMULATION): $(SIMULATION_SRC)
-	$(CPP) -o $@  $(SIMULATION_SRC) -L$(NS3_LIB_DIR) $(NS3_LIBS)
+$(SIMULATION): $(SIMULATION_SRC) $(TCP_SEND_APP_SRC)
+	$(CPP) -o $@  $(SIMULATION_SRC) $(TCP_SEND_APP_SRC) -L$(NS3_LIB_DIR) $(NS3_LIBS)
 
 %.o: %.cc
 	$(CPP) $(CPPFLAGS) -o $@ $<
 
 clean:
-	rm -rf src/*.o src/*/*.o  *.pcap *~  2> /dev/null
+	rm -rf src/*.o src/*/*.o *.pcap output-attributes.txt *~  2> /dev/null
 
 run_simulation: $(SIMULATION)
 	make run_simulation_newreno
@@ -50,23 +51,29 @@ run_simulation_newreno: $(SIMULATION)
 valgrind: $(SIMULATION)
 	LD_LIBRARY_PATH=$(NS3_LIB_DIR) valgrind --tool=memcheck --leak-check=yes ./$(SIMULATION)
 	
-plot_server_txrx: $(SIMULATION)
+plot_server_traces: $(SIMULATION)
 	rm -rf plotdata/* 2>/dev/null
 	touch plotdata/.gitkeep
 	mkdir plotdata/Tahoe plotdata/Reno plotdata/NewReno
 	make run_simulation_tahoe
 	gnuplot < plot-tx-rx.script
 	gnuplot < plot-tx-rx-zoom.script
+	gnuplot < plot-cw-ssth.script
+	gnuplot < plot-cw-ssth-zoom.script
 	mv plotdata/*.data plotdata/Tahoe
 	mv plotdata/*.png plotdata/Tahoe
 	make run_simulation_reno
 	gnuplot < plot-tx-rx.script
 	gnuplot < plot-tx-rx-zoom.script
+	gnuplot < plot-cw-ssth.script
+	gnuplot < plot-cw-ssth-zoom.script
 	mv plotdata/*.data plotdata/Reno
 	mv plotdata/*.png plotdata/Reno
 	make run_simulation_newreno
 	gnuplot < plot-tx-rx.script
 	gnuplot < plot-tx-rx-zoom.script
+	gnuplot < plot-cw-ssth.script
+	gnuplot < plot-cw-ssth-zoom.script
 	mv plotdata/*.data plotdata/NewReno
 	mv plotdata/*.png plotdata/NewReno
 

@@ -10,6 +10,9 @@
 #include <ns3/ipv4-global-routing-helper.h>
 #include <ns3/application-container.h>
 #include <ns3/packet.h>
+#include <ns3/config-store.h>
+
+#include "tcpsendapplication.h"
 
 
 // Networg Topology
@@ -22,29 +25,6 @@
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("rene-pa_02");
-
-//void TraceTRxN(Ptr<OutputStreamWrapper> stream, Ptr<const Packet> packet, Ptr<Ipv4> ipv4, uint32_t interface) 
-//{ 
-////  *stream->GetStream() << Simulator::Now().GetSeconds() << '\t';
-////  packet->Print(*stream->GetStream());
-////  *stream->GetStream() << std::endl;
-//  
-//  Packet p(*packet);
-//  Ipv4Header iph;
-//  p.PeekHeader(iph);
-//  p.RemoveHeader(iph);
-//  
-//  TcpHeader tcpHeader;
-//  if (p.PeekHeader(tcpHeader))
-//  {
-//    *stream->GetStream() << Simulator::Now().GetSeconds() << '\t';
-////    tcpHeader.Print(*stream->GetStream());
-//    *stream->GetStream() << (uint32_t)tcpHeader.GetSequenceNumber().GetValue();
-//    *stream->GetStream() << '\t';
-//    *stream->GetStream() << (uint32_t)tcpHeader.GetAckNumber().GetValue();
-//    *stream->GetStream() << std::endl;
-//  }
-//}
 
 void TraceRx(Ptr<OutputStreamWrapper> stream, Ptr<const Packet> packet) 
 {
@@ -143,8 +123,12 @@ void TraceTx(Ptr<OutputStreamWrapper> stream, Ptr<const Packet> packet)
   }
 }
 
-void RWNDCallback(uint32_t oldRWND, uint32_t newRWND) {
-  std::cout << "old rwnd: " << oldRWND << " new rwnd: " << newRWND << std::endl;
+Ptr<Socket> SrcTcpSocket;
+void TraceCwSsth(Ptr<OutputStreamWrapper> stream, uint32_t oldVal, uint32_t newVal) {
+  UintegerValue ssth;
+  SrcTcpSocket->GetAttribute("SlowStartThreshold", ssth);
+  *stream->GetStream() << Simulator::Now().GetSeconds() << '\t' 
+          << newVal << "\t" << ssth.Get() << std::endl;
 }
 
 int
@@ -157,18 +141,14 @@ main (int argc, char *argv[])
   cmd.Parse (argc, argv);
   
   // Options
-  GlobalValue::Bind ("ChecksumEnabled", BooleanValue (true));
+  GlobalValue::Bind ("ChecksumEnabled", BooleanValue(true));
+//  Config::SetDefault("ns3::DropTailQueue::MaxPackets", UintegerValue(2));
   
-  if (tcpVersion.compare("Tahoe") == 0) {
-    Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::TcpTahoe"));
-  } else if (tcpVersion.compare("Reno") == 0) {
-    Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::TcpReno"));
-  } else if (tcpVersion.compare("NewReno") == 0) {
-    Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::TcpNewReno"));
-  } else {
-    std::cerr << "tcpVersion argument is not Tahoe, Reno or NewReno!" << std::endl;
+  if (tcpVersion.compare("Tahoe") != 0 && tcpVersion.compare("Reno") != 0 && tcpVersion.compare("NewReno") != 0) {
+    std::cerr << "tcpVersion argument should be Tahoe, Reno or NewReno!" << std::endl;
     exit(EXIT_FAILURE);
   }
+  Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::Tcp" + tcpVersion));
   NS_LOG_INFO("TCP Version set to " << tcpVersion);
     
   // create nodes
@@ -179,20 +159,14 @@ main (int argc, char *argv[])
   routerClientNodes.Add(serverRouterNodes.Get(1));
   routerClientNodes.Create(1);
 
-  // create devices and set settings
-//  CsmaHelper deviceSettingsHelper;
-//  deviceSettingsHelper.SetChannelAttribute("DataRate", StringValue("2Mbps"));
-  
+  // create devices and set settings  
   PointToPointHelper deviceSettingsHelper;
   deviceSettingsHelper.SetDeviceAttribute("DataRate", StringValue("2Mbps"));
-  
   deviceSettingsHelper.SetChannelAttribute("Delay", StringValue("20ms"));
   deviceSettingsHelper.SetQueue(DropTailQueue::GetTypeId().GetName());
-
+  
   NetDeviceContainer serverRouterDevices;
   serverRouterDevices = deviceSettingsHelper.Install(serverRouterNodes);
-
-  // on greater networks use CsmaHelper to install devices
   NetDeviceContainer routerClientDevices;
   routerClientDevices = deviceSettingsHelper.Install(routerClientNodes);
 
@@ -229,14 +203,10 @@ main (int argc, char *argv[])
   // set receive error model on server interface
   serverRouterDevices.Get(1)->SetAttribute("ReceiveErrorModel", PointerValue(errorModel));
   
-  Packet::EnablePrinting();
-  
+//  Packet::EnablePrinting();
   AsciiTraceHelper asciiTraceHelper;
   Ptr<OutputStreamWrapper> streamRx = asciiTraceHelper.CreateFileStream ("plotdata/server-trace-rx.data");
   Ptr<OutputStreamWrapper> streamTx = asciiTraceHelper.CreateFileStream ("plotdata/server-trace-tx.data");
-  
-//  Config::ConnectWithoutContext("/NodeList/0/$ns3::Ipv4L3Protocol/Rx", MakeBoundCallback(&TraceTRxN, streamRx));
-//  Config::ConnectWithoutContext("/NodeList/0/$ns3::Ipv4L3Protocol/Tx", MakeBoundCallback(&TraceTRxN, streamTx));
   
   serverRouterDevices.Get(0)->TraceConnectWithoutContext("MacRx", MakeBoundCallback(&TraceRx, streamRx));
   serverRouterDevices.Get(0)->TraceConnectWithoutContext("MacTx", MakeBoundCallback(&TraceTx, streamTx));
@@ -244,20 +214,49 @@ main (int argc, char *argv[])
 //  LogComponentEnable("PacketSink", LOG_LEVEL_INFO);
   
   uint16_t receivePort = 55000;
-  InetSocketAddress receiveSock(receivePort);
-  PacketSinkHelper sinkHelper(TcpSocketFactory::GetTypeId().GetName(), receiveSock);
+  InetSocketAddress receiverAddr(receivePort);
+  PacketSinkHelper sinkHelper(TcpSocketFactory::GetTypeId().GetName(), receiverAddr);
   ApplicationContainer sinkApps = sinkHelper.Install (routerClientNodes.Get(1));
     
 //  LogComponentEnable("BulkSendApplication", LOG_LEVEL_LOGIC);
   
-  InetSocketAddress sendSock(routerClinetInterfaces.GetAddress(1), receiveSock.GetPort());
-  BulkSendHelper packetSendHelper(TcpSocketFactory::GetTypeId().GetName(), sendSock);
-  ApplicationContainer srcApps = packetSendHelper.Install(serverRouterNodes.Get(0));
+  InetSocketAddress sinkAddr(routerClinetInterfaces.GetAddress(1), receiverAddr.GetPort());
+//  BulkSendHelper packetSendHelper(TcpSocketFactory::GetTypeId().GetName(), sinkAddr);
+//  ApplicationContainer srcApps = packetSendHelper.Install(serverRouterNodes.Get(0));
   
+  SrcTcpSocket = Socket::CreateSocket (serverRouterNodes.Get (0), TcpSocketFactory::GetTypeId ());
+  Ptr<OutputStreamWrapper> streamCwSsth = asciiTraceHelper.CreateFileStream ("plotdata/server-cw-ssth.data");
+  SrcTcpSocket->TraceConnectWithoutContext ("CongestionWindow", MakeBoundCallback (&TraceCwSsth, streamCwSsth));
+  
+  Ptr<TcpSendApplication> app = CreateObject<TcpSendApplication> ();
+  DataRateValue dataRate;
+  serverRouterDevices.Get(0)->GetAttribute("DataRate", dataRate);
+  app->Setup (SrcTcpSocket, sinkAddr, 2000, dataRate.Get());
+  
+  serverRouterNodes.Get(0)->AddApplication(app);
+  app->SetStartTime (Seconds (2.));
+  app->SetStopTime (Seconds (9.));
+
   sinkApps.Start (Seconds (1.0));
   sinkApps.Stop (Seconds (10.0));
-  srcApps.Start(Seconds(2.0));
-  srcApps.Stop(Seconds(9.0));
+//  srcApps.Start(Seconds(2.0));
+//  srcApps.Stop(Seconds(9.0));
+  
+  // dubug attribute values
+//  Config::SetDefault ("ns3::ConfigStore::Filename", StringValue ("output-attributes.xml"));
+//  Config::SetDefault ("ns3::ConfigStore::FileFormat", StringValue ("Xml"));
+//  Config::SetDefault ("ns3::ConfigStore::Mode", StringValue ("Save"));
+//  ConfigStore outputConfig;
+//  outputConfig.ConfigureDefaults ();
+//  outputConfig.ConfigureAttributes ();
+
+  // Output config store to txt format
+  Config::SetDefault ("ns3::ConfigStore::Filename", StringValue ("output-attributes.txt"));
+  Config::SetDefault ("ns3::ConfigStore::FileFormat", StringValue ("RawText"));
+  Config::SetDefault ("ns3::ConfigStore::Mode", StringValue ("Save"));
+  ConfigStore outputConfig2;
+  outputConfig2.ConfigureDefaults ();
+  outputConfig2.ConfigureAttributes ();
 
   Simulator::Run ();
   Simulator::Destroy ();
